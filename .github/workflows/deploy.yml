@@ -98,6 +98,7 @@ jobs:
           password: ${{ secrets.VM_PASSWORD }}
           source: "build/"
           target: "/home/${{ secrets.VM_USER }}/frontend"
+          strip_components: 1
 
       - name: Restart nginx
         uses: appleboy/ssh-action@v1.0.3
