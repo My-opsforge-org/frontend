@@ -42,20 +42,6 @@ jobs:
       - name: List build directory in root
         run: ls -l build || echo "No build directory in root."
 
-      - name: List Frontend directory contents after build
-        run: ls -l Frontend
-
-      - name: Print npm build log if exists
-        run: |
-          if [ -f Frontend/npm-debug.log ]; then
-            tail -n 100 Frontend/npm-debug.log
-          else
-            echo "No npm-debug.log found."
-          fi
-
-      - name: List build directory contents
-        run: ls -l Frontend/build
-
       - name: Clean target directory on VM
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
@@ -67,7 +53,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PASSWORD }}
-          source: "Frontend/build/*"
+          source: "build/*"
           target: "/home/${{ secrets.VM_USER }}/frontend"
 
       - name: Restart nginx
