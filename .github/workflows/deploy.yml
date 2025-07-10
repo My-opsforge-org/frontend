@@ -96,7 +96,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PASSWORD }}
-          source: "build/*"
+          source: "build/"
           target: "/home/${{ secrets.VM_USER }}/frontend"
 
       - name: Restart nginx
