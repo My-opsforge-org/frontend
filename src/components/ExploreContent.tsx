@@ -15,8 +15,8 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
   const [placesError, setPlacesError] = useState('');
   const [address, setAddress] = useState('');
   const [geocodeResult, setGeocodeResult] = useState<{lat: number, lng: number, address: string} | null>(null);
-  const [geocodeLoading, setGeocodeLoading] = useState(false);
-  const [geocodeError, setGeocodeError] = useState('');
+  const [geocodeLoading] = useState(false);
+  const [geocodeError] = useState('');
 
   useEffect(() => {
     if (navigator.geolocation) {
