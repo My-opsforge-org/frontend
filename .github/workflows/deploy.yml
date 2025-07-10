@@ -70,6 +70,11 @@ jobs:
           sudo nginx -t
           EOF
 
+      - name: Remove existing nginx script directory on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'rm -rf /home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh'
+
       - name: Copy nginx config script to VM
         uses: appleboy/scp-action@v0.1.7
         with:
