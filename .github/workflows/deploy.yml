@@ -47,18 +47,42 @@ jobs:
           sudo apt-get update && sudo apt-get install -y sshpass
           sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend && mkdir -p /home/${{ secrets.VM_USER }}/frontend"
 
-      - name: Install and configure nginx on VM
+      - name: Create nginx config script
+        run: |
+          cat > nginx-frontend-setup.sh <<'EOF'
+          #!/bin/bash
+          sudo apt-get update && sudo apt-get install -y nginx
+          sudo tee /etc/nginx/sites-available/frontend > /dev/null <<EOC
+          server {
+              listen 80;
+              server_name _;
+              root /home/${{ secrets.VM_USER }}/frontend;
+              index index.html;
+              location / {
+                  try_files \$uri /index.html;
+              }
+          }
+          EOC
+          sudo ln -sf /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/frontend
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo chown -R www-data:www-data /home/${{ secrets.VM_USER }}/frontend
+          sudo chmod -R 755 /home/${{ secrets.VM_USER }}/frontend
+          sudo nginx -t
+          EOF
+
+      - name: Copy nginx config script to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          password: ${{ secrets.VM_PASSWORD }}
+          source: "nginx-frontend-setup.sh"
+          target: "/home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh"
+
+      - name: Run nginx config script on VM
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} '
-            sudo apt-get update && sudo apt-get install -y nginx && \
-            echo "server {\n    listen 80;\n    server_name _;\n    root /home/${{ secrets.VM_USER }}/frontend;\n    index index.html;\n    location / {\n        try_files \$uri /index.html;\n    }\n}" | sudo tee /etc/nginx/sites-available/frontend && \
-            sudo ln -sf /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/frontend && \
-            sudo rm -f /etc/nginx/sites-enabled/default && \
-            sudo chown -R www-data:www-data /home/${{ secrets.VM_USER }}/frontend && \
-            sudo chmod -R 755 /home/${{ secrets.VM_USER }}/frontend && \
-            sudo nginx -t
-          '
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'bash /home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh'
 
       - name: Copy build to VM
         uses: appleboy/scp-action@v0.1.7
