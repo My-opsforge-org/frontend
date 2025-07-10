@@ -28,20 +28,6 @@ jobs:
         run: npm ci
         working-directory: ./Frontend
 
-      - name: Create .env file
-        run: |
-          echo "REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}" > Frontend/.env
-
-      - name: Print .env file before build
-        run: cat Frontend/.env
-
-      - name: Debug .env contents
-        run: cat Frontend/.env
-
-      - name: Debug environment variable
-        run: |
-          echo "REACT_APP_API_BASE_URL value: ${{ secrets.REACT_APP_API_BASE_URL }}"
-
       - name: Build React app
         run: npm run build
         working-directory: ./Frontend
