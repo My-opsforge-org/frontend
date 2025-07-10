@@ -1,13 +1,10 @@
-import { Box, CircularProgress, Container } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useThemeToggle } from '../App';
 import BottomNav from './BottomNav';
 import Content from './Content';
-import FAB from './FAB';
 import Header from './Header';
 import { API_BASE_URL } from '../api';
-
-const TABS = ['home', 'explore', 'people', 'connect', 'community'];
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
