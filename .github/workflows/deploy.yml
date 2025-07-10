@@ -36,6 +36,12 @@ jobs:
         run: npm run build
         working-directory: ./Frontend
 
+      - name: List root directory after build
+        run: ls -l
+
+      - name: List build directory in root
+        run: ls -l build || echo "No build directory in root."
+
       - name: List Frontend directory contents after build
         run: ls -l Frontend
 
