@@ -33,6 +33,11 @@ jobs:
         run: npm run build
         working-directory: ./Frontend
 
+      - name: Clean target directory on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend && mkdir -p /home/${{ secrets.VM_USER }}/frontend"
+
       - name: Copy build to VM
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -40,7 +45,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PASSWORD }}
           source: "Frontend/build/*"
-          target: ${{ secrets.VM_TARGET_DIR }}
+          target: "/home/${{ secrets.VM_USER }}/frontend"
 
       - name: Restart nginx
         uses: appleboy/ssh-action@v1.0.3
