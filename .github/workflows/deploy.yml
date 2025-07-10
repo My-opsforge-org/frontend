@@ -32,6 +32,9 @@ jobs:
         run: |
           echo "REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}" > Frontend/.env
 
+      - name: Print .env file before build
+        run: cat Frontend/.env
+
       - name: Debug .env contents
         run: cat Frontend/.env
 
@@ -52,7 +55,7 @@ jobs:
       - name: Clean target directory on VM
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend && mkdir -p /home/${{ secrets.VM_USER }}/frontend"
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend/*"
 
       - name: Create nginx config script
         run: |
