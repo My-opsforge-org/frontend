@@ -13,6 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: List root directory after checkout
+        run: ls -l
+
       - name: Ensure Frontend directory exists
         run: mkdir -p Frontend
 
