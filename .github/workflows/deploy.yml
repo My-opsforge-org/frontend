@@ -35,7 +35,6 @@ jobs:
       - name: Debug .env contents
         run: cat Frontend/.env
 
-        
       - name: Debug environment variable
         run: |
           echo "REACT_APP_API_BASE_URL value: ${{ secrets.REACT_APP_API_BASE_URL }}"
