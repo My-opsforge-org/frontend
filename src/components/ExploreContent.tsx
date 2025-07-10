@@ -10,8 +10,6 @@ import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [error, setError] = useState('');
-  const [manualLat, setManualLat] = useState('');
-  const [manualLng, setManualLng] = useState('');
   const [places, setPlaces] = useState<any[]>([]);
   const [placesLoading, setPlacesLoading] = useState(false);
   const [placesError, setPlacesError] = useState('');
@@ -69,98 +67,6 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPlacesError('');
-    setPlaces([]);
-    setPlacesLoading(true);
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/explore/places?lat=` + manualLat + '&lng=' + manualLng, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (response.ok && data.results) {
-        setPlaces(data.results);
-      } else {
-        setPlacesError(data.error || 'Could not fetch places');
-      }
-    } catch (err) {
-      setPlacesError('Network error');
-    } finally {
-      setPlacesLoading(false);
-    }
-  };
-
-  const handleGeocodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setGeocodeError('');
-    setGeocodeResult(null);
-    setGeocodeLoading(true);
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/explore/geocode?address=` + encodeURIComponent(address), {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (response.ok && data.latitude && data.longitude) {
-        setGeocodeResult({ lat: data.latitude, lng: data.longitude, address: data.address });
-      } else {
-        setGeocodeError(data.error || 'Could not find coordinates for the address');
-      }
-    } catch (err) {
-      setGeocodeError('Network error');
-    } finally {
-      setGeocodeLoading(false);
-    }
-  };
-
-  const handleFindPlacesFromGeocode = async () => {
-    if (!geocodeResult) return;
-    setPlacesError('');
-    setPlaces([]);
-    setPlacesLoading(true);
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/explore/places?lat=` + geocodeResult.lat + '&lng=' + geocodeResult.lng, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (response.ok && data.results) {
-        setPlaces(data.results);
-      } else {
-        setPlacesError(data.error || 'Could not fetch places');
-      }
-    } catch (err) {
-      setPlacesError('Network error');
-    } finally {
-      setPlacesLoading(false);
-    }
-  };
-
-  // Helper to search places by lat/lng directly
-  const handleFindPlacesFromCoords = async (lat: number, lng: number) => {
-    setPlacesError('');
-    setPlaces([]);
-    setPlacesLoading(true);
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/explore/places?lat=` + lat + '&lng=' + lng, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (response.ok && data.results) {
-        setPlaces(data.results);
-      } else {
-        setPlacesError(data.error || 'Could not fetch places');
-      }
-    } catch (err) {
-      setPlacesError('Network error');
-    } finally {
-      setPlacesLoading(false);
-    }
-  };
 
   const handleGetPlaces = async (e: React.FormEvent) => {
     e.preventDefault();
