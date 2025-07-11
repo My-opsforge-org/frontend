@@ -16,9 +16,6 @@ jobs:
       - name: List root directory after checkout
         run: ls -l
 
-      - name: Ensure Frontend directory exists
-        run: mkdir -p Frontend
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -32,11 +29,16 @@ jobs:
         run: npm run build
         working-directory: ./Frontend
 
-      - name: List root directory after build
-        run: ls -l
+      - name: List Frontend directory after build
+        run: ls -la Frontend/
 
-      - name: List build directory in root
-        run: ls -l build || echo "No build directory in root."
+      - name: List build directory in Frontend
+        run: ls -la Frontend/build || echo "No build directory in Frontend."
+
+      - name: Create target directory on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "mkdir -p /home/${{ secrets.VM_USER }}/frontend"
 
       - name: Clean target directory on VM
         run: |
@@ -97,9 +99,9 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PASSWORD }}
-          source: "build/"
+          source: "Frontend/build/"
           target: "/home/${{ secrets.VM_USER }}/frontend"
-          strip_components: 1
+          strip_components: 2
 
       - name: Restart nginx
         uses: appleboy/ssh-action@v1.0.3
