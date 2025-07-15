@@ -7,6 +7,8 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import ShareIcon from '@mui/icons-material/Share';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import { useNavigate } from 'react-router-dom';
+import FAB from './FAB';
 
 interface Post {
   id: number;
@@ -42,6 +44,15 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   const [commentsOpen, setCommentsOpen] = useState<{open: boolean, postId: number | null}>({open: false, postId: null});
   const [comments, setComments] = useState<{[key:number]: any[]}>({});
   const [commentsLoading, setCommentsLoading] = useState<{[key:number]: boolean}>({});
+  const navigate = useNavigate();
+
+  // FAB and modal state for profile post
+  const [openProfilePostModal, setOpenProfilePostModal] = useState(false);
+  const [profilePostTitle, setProfilePostTitle] = useState('');
+  const [profilePostContent, setProfilePostContent] = useState('');
+  const [profilePostImages, setProfilePostImages] = useState(''); // comma-separated URLs
+  const [profilePostError, setProfilePostError] = useState('');
+  const [creatingProfilePost, setCreatingProfilePost] = useState(false);
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -54,6 +65,11 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
             'Authorization': `Bearer ${token}`
           }
         });
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          navigate('/login', { replace: true });
+          return;
+        }
         const data = await response.json();
         if (response.ok) {
           setPosts(data.posts || []);
@@ -67,7 +83,7 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       }
     };
     fetchFeed();
-  }, []);
+  }, [navigate]);
 
   const handleLike = async (postId: number) => {
     setLikeLoading(l => ({...l, [postId]: true}));
@@ -154,6 +170,48 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   };
 
   const closeCommentsModal = () => setCommentsOpen({open: false, postId: null});
+
+  // Handler for creating profile post
+  const handleCreateProfilePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfilePostError('');
+    setCreatingProfilePost(true);
+    const token = localStorage.getItem('access_token');
+    try {
+      const response = await fetch(`${API_BASE_URL}/profile/posts`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: profilePostTitle,
+          content: profilePostContent,
+          image_urls: profilePostImages
+            .split(',')
+            .map(url => url.trim())
+            .filter(url => url.length > 0),
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setPosts(posts => [{
+          ...data.post,
+          images: (data.post.image_urls || []).map((url: string) => ({ url })),
+        }, ...posts]);
+        setProfilePostTitle('');
+        setProfilePostContent('');
+        setProfilePostImages('');
+        setOpenProfilePostModal(false);
+        setSnackbar({ open: true, message: 'Profile post created!', severity: 'success' });
+      } else {
+        setProfilePostError(data.error || data.message || 'Failed to create post');
+      }
+    } catch {
+      setProfilePostError('Network error');
+    }
+    setCreatingProfilePost(false);
+  };
 
   if (isLoading) {
     return (
@@ -294,6 +352,48 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
           )}
           <Button onClick={closeCommentsModal}>Close</Button>
         </DialogActions>
+      </Dialog>
+      {/* FAB for creating profile post */}
+      <FAB isDarkTheme={isDarkTheme} onClick={() => setOpenProfilePostModal(true)} />
+      <Dialog open={openProfilePostModal} onClose={() => setOpenProfilePostModal(false)}>
+        <DialogTitle>Create Profile Post</DialogTitle>
+        <form onSubmit={handleCreateProfilePost}>
+          <DialogContent>
+            <TextField
+              label="Title"
+              value={profilePostTitle}
+              onChange={e => setProfilePostTitle(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Content"
+              value={profilePostContent}
+              onChange={e => setProfilePostContent(e.target.value)}
+              fullWidth
+              margin="normal"
+              multiline
+              minRows={2}
+              required
+            />
+            <TextField
+              label="Image URLs (comma separated)"
+              value={profilePostImages}
+              onChange={e => setProfilePostImages(e.target.value)}
+              fullWidth
+              margin="normal"
+              placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+            />
+            {profilePostError && <Typography color="error" sx={{ mt: 1 }}>{profilePostError}</Typography>}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenProfilePostModal(false)}>Cancel</Button>
+            <Button type="submit" variant="contained" color="primary" disabled={creatingProfilePost}>
+              {creatingProfilePost ? 'Posting...' : 'Post'}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );

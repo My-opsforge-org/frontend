@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../api';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -24,6 +25,7 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
   const [followLoading, setFollowLoading] = useState<{[userId: number]: boolean}>({});
   const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({open: false, message: '', severity: 'success'});
   const [currentUserId, setCurrentUserId] = useState<number|null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -34,12 +36,18 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
         if (!token) {
           setError('Not authenticated. Please log in.');
           setLoading(false);
+          navigate('/login', { replace: true });
           return;
         }
         // Get current user id from profile
         const profileRes = await fetch(`${API_BASE_URL}/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (profileRes.status === 401) {
+          localStorage.removeItem('access_token');
+          navigate('/login', { replace: true });
+          return;
+        }
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           setCurrentUserId(profileData.id);
@@ -50,6 +58,11 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
             'Authorization': `Bearer ${token}`
           }
         });
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          navigate('/login', { replace: true });
+          return;
+        }
         const data = await response.json();
         if (response.ok) {
           setUsers(data.users);
@@ -63,7 +76,7 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
       }
     };
     fetchUsers();
-  }, []);
+  }, [navigate]);
 
   const handleFollow = async (userId: number) => {
     setFollowLoading((prev) => ({ ...prev, [userId]: true }));

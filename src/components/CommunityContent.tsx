@@ -7,6 +7,9 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import { useNavigate } from 'react-router-dom';
+import CommunityList from './CommunityList';
+import CommunityPosts from './CommunityPosts';
 
 interface Community {
   id: number;
@@ -36,34 +39,48 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
   const [postContent, setPostContent] = useState('');
   const [postError, setPostError] = useState('');
   const [creatingPost, setCreatingPost] = useState(false);
+  const [postImages, setPostImages] = useState(''); // comma-separated URLs
   const [actionLoading, setActionLoading] = useState<number | null>(null); // community id for which join/leave is loading
   const [fabOpen, setFabOpen] = useState(false);
   const [newCommunityName, setNewCommunityName] = useState('');
   const [newCommunityDesc, setNewCommunityDesc] = useState('');
   const [creatingCommunity, setCreatingCommunity] = useState(false);
   const [communityError, setCommunityError] = useState('');
+  const navigate = useNavigate();
 
   // Fetch user profile
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem('access_token');
-      if (!token) return;
+      if (!token) {
+        navigate('/login', { replace: true });
+        return;
+      }
       try {
         const res = await fetch(`${API_BASE_URL}/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (res.status === 401) {
+          localStorage.removeItem('access_token');
+          navigate('/login', { replace: true });
+          return;
+        }
         const data = await res.json();
         if (res.ok) setProfile(data);
       } catch {}
     };
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   // Fetch all communities and joined communities, then merge is_member
   useEffect(() => {
     const fetchCommunitiesAndJoined = async () => {
       setLoading(true);
       const token = localStorage.getItem('access_token');
+      if (!token) {
+        navigate('/login', { replace: true });
+        return;
+      }
       try {
         const [allRes, joinedRes] = await Promise.all([
           fetch(`${API_BASE_URL}/communities`, {
@@ -73,6 +90,11 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
+        if (allRes.status === 401 || joinedRes.status === 401) {
+          localStorage.removeItem('access_token');
+          navigate('/login', { replace: true });
+          return;
+        }
         const allData = await allRes.json();
         const joinedData = await joinedRes.json();
         if (allRes.ok && joinedRes.ok) {
@@ -148,13 +170,21 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ title: postTitle, content: postContent, image_urls: [] })
+        body: JSON.stringify({
+          title: postTitle,
+          content: postContent,
+          image_urls: postImages
+            .split(',')
+            .map(url => url.trim())
+            .filter(url => url.length > 0)
+        })
       });
       const data = await res.json();
       if (res.ok) {
         setPosts([data, ...posts]);
         setPostTitle('');
         setPostContent('');
+        setPostImages('');
       } else {
         setPostError(data.error || 'Failed to create post');
       }
@@ -210,101 +240,39 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
 
   return (
     <Box>
-      <Typography variant="h4" color={isDarkTheme ? 'white' : 'black'} gutterBottom>Communities</Typography>
-      <List>
-        {communities.map(community => (
-          <ListItem key={community.id} disablePadding>
-            <ListItemButton
-              selected={selectedCommunity?.id === community.id}
-              onClick={() => handleSelectCommunity(community)}
-            >
-              <ListItemText
-                primary={community.name}
-                secondary={community.description}
-              />
-              <ListItemSecondaryAction>
-                {community.is_member ? (
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    size="small"
-                    disabled={actionLoading === community.id}
-                    onClick={e => { e.stopPropagation(); handleJoinLeave(community, false); }}
-                  >
-                    {actionLoading === community.id ? 'Leaving...' : 'Leave'}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    disabled={actionLoading === community.id}
-                    onClick={e => { e.stopPropagation(); handleJoinLeave(community, true); }}
-                  >
-                    {actionLoading === community.id ? 'Joining...' : 'Join'}
-                  </Button>
-                )}
-              </ListItemSecondaryAction>
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      {selectedCommunity && (
-        <Box mt={4}>
-          <Typography variant="h5" color={isDarkTheme ? 'white' : 'black'} gutterBottom>
-            Posts in {selectedCommunity.name}
-          </Typography>
-          {selectedCommunity.is_member && (
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>Create a Post</Typography>
-                <form onSubmit={handleCreatePost}>
-                  <TextField
-                    label="Title"
-                    value={postTitle}
-                    onChange={e => setPostTitle(e.target.value)}
-                    fullWidth
-                    margin="normal"
-                    required
-                  />
-                  <TextField
-                    label="Content"
-                    value={postContent}
-                    onChange={e => setPostContent(e.target.value)}
-                    fullWidth
-                    margin="normal"
-                    multiline
-                    minRows={2}
-                    required
-                  />
-                  {postError && <Typography color="error">{postError}</Typography>}
-                  <Button type="submit" variant="contained" color="primary" disabled={creatingPost} sx={{ mt: 1 }}>
-                    {creatingPost ? 'Posting...' : 'Post'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-          {postsLoading ? (
-            <CircularProgress />
-          ) : posts.length === 0 ? (
-            <Typography color={isDarkTheme ? 'white' : 'black'}>No posts yet.</Typography>
-          ) : (
-            posts.map(post => (
-              <Card key={post.id} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography variant="h6">{post.title}</Typography>
-                  <Typography variant="body2" color="textSecondary">{post.content}</Typography>
-                  <Typography variant="caption" color="textSecondary">By User {post.author_id} on {new Date(post.created_at).toLocaleString()}</Typography>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </Box>
+      {!selectedCommunity ? (
+        <>
+          <CommunityList
+            communities={communities}
+            actionLoading={actionLoading}
+            handleJoinLeave={handleJoinLeave}
+            handleSelectCommunity={handleSelectCommunity}
+            selectedCommunity={selectedCommunity}
+            isDarkTheme={isDarkTheme}
+          />
+        </>
+      ) : (
+        <CommunityPosts
+          selectedCommunity={selectedCommunity}
+          posts={posts}
+          postsLoading={postsLoading}
+          postTitle={postTitle}
+          postContent={postContent}
+          postError={postError}
+          creatingPost={creatingPost}
+          handleCreatePost={handleCreatePost}
+          setPostTitle={setPostTitle}
+          setPostContent={setPostContent}
+          isDarkTheme={isDarkTheme}
+          onBack={() => setSelectedCommunity(null)}
+          postImages={postImages}
+          setPostImages={setPostImages}
+        />
       )}
       {/* FAB for creating a new community */}
-      <FAB isDarkTheme={isDarkTheme} onClick={() => setFabOpen(true)} />
+      {!selectedCommunity && (
+        <FAB isDarkTheme={isDarkTheme} onClick={() => setFabOpen(true)} />
+      )}
       <Dialog open={fabOpen} onClose={() => setFabOpen(false)}>
         <DialogTitle>Create Community</DialogTitle>
         <form onSubmit={handleCreateCommunity}>
@@ -333,6 +301,47 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
             <Button onClick={() => setFabOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained" color="primary" disabled={creatingCommunity}>
               {creatingCommunity ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+      {/* Add image URLs field to the post creation modal */}
+      <Dialog open={!!selectedCommunity?.is_member && fabOpen} onClose={() => setFabOpen(false)}>
+        <DialogTitle>Create a Post in {selectedCommunity?.name}</DialogTitle>
+        <form onSubmit={handleCreatePost}>
+          <DialogContent>
+            <TextField
+              label="Title"
+              value={postTitle}
+              onChange={e => setPostTitle(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Content"
+              value={postContent}
+              onChange={e => setPostContent(e.target.value)}
+              fullWidth
+              margin="normal"
+              multiline
+              minRows={2}
+              required
+            />
+            <TextField
+              label="Image URLs (comma separated)"
+              value={postImages}
+              onChange={e => setPostImages(e.target.value)}
+              fullWidth
+              margin="normal"
+              placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+            />
+            {postError && <Typography color="error">{postError}</Typography>}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setFabOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="contained" color="primary" disabled={creatingPost}>
+              {creatingPost ? 'Posting...' : 'Post'}
             </Button>
           </DialogActions>
         </form>
