@@ -71,13 +71,14 @@ export default function Home() {
         handleLogout={handleLogout}
         profileData={profileData}
         activeTab={activeTab}
+        setActiveTab={setActiveTab}
         onProfileUpdate={(newProfile: any) => {
           setProfileData(newProfile);
           setName(newProfile.name || 'User');
           setProfileImage(newProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(newProfile.name || 'User')}`);
         }}
       />
-      <Content isDarkTheme={isDark} activeTab={activeTab} />
+      <Content isDarkTheme={isDark} activeTab={activeTab} setActiveTab={setActiveTab} />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isDarkTheme={isDark} />
     </Box>
   );

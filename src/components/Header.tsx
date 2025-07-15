@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { API_BASE_URL } from '../api';
 import { useNavigate } from 'react-router-dom';
 
-export default function Header({ name, profileImage, isDarkTheme, showOptions, setShowOptions, toggleTheme, handleLogout, profileData, activeTab, onProfileUpdate }: any) {
+export default function Header({ name, profileImage, isDarkTheme, showOptions, setShowOptions, toggleTheme, handleLogout, profileData, activeTab, setActiveTab, onProfileUpdate }: any) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -96,7 +96,7 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
                     variant="contained"
                     size="medium"
                     startIcon={<AccountCircleIcon />}
-                    onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+                    onClick={() => { setProfileOpen(false); setActiveTab('profile'); }}
                     sx={{
                       ml: 1,
                       bgcolor: 'primary.main',

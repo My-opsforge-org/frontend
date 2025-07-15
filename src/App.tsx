@@ -37,7 +37,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/profile" element={<RequireAuth><Profile isDarkTheme={isDarkTheme} /></RequireAuth>} />
             <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
