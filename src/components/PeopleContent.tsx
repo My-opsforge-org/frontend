@@ -5,6 +5,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { useNavigate } from 'react-router-dom';
+import Profile from './Profile';
 
 interface User {
   id: number;
@@ -25,6 +26,7 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
   const [followLoading, setFollowLoading] = useState<{[userId: number]: boolean}>({});
   const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({open: false, message: '', severity: 'success'});
   const [currentUserId, setCurrentUserId] = useState<number|null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number|null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -138,6 +140,10 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
     }
   };
 
+  if (selectedUserId !== null) {
+    return <Profile userId={selectedUserId} isDarkTheme={isDarkTheme} onBack={() => setSelectedUserId(null)} />;
+  }
+
   return (
     <Box display="flex" flexDirection="column" alignItems="stretch" justifyContent="flex-start" width="100%" height="100%" minHeight="100vh" bgcolor={isDarkTheme ? '#222' : '#fafafa'}>
       <Typography variant="h5" color={isDarkTheme ? 'white' : 'black'} gutterBottom sx={{ p: 2 }}>
@@ -182,14 +188,14 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
                   </Box>
                 }>
                   <ListItemAvatar>
-                    <Avatar>
+                    <Avatar onClick={() => setSelectedUserId(user.id)} style={{ cursor: 'pointer' }}>
                       {user.name && user.name.length > 0
                         ? user.name.charAt(0).toUpperCase()
                         : <ChatBubbleOutlineIcon />}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={user.name}
+                    primary={<span style={{ cursor: 'pointer' }} onClick={() => setSelectedUserId(user.id)}>{user.name}</span>}
                     secondary={user.email + (user.bio ? ` — ${user.bio}` : '')}
                   />
                 </ListItem>
