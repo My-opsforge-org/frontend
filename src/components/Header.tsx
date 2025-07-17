@@ -17,8 +17,6 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const navigate = useNavigate();
-
   React.useEffect(() => {
     setEditProfile(profileData || {});
   }, [profileData]);

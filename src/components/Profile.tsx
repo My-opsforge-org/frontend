@@ -36,7 +36,6 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
   const [postsLoading, setPostsLoading] = React.useState(true);
   const [postsError, setPostsError] = React.useState('');
   const [isOwnProfile, setIsOwnProfile] = React.useState(true);
-  const [userId, setUserId] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     const fetchProfileAndFollows = async () => {
@@ -68,7 +67,6 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
             setLoading(false);
             return;
           }
-          setUserId(profileData.id);
           setProfileData(profileData);
           setEditProfile(profileData);
           setIsOwnProfile(true);
@@ -82,7 +80,6 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
           const meData = await meRes.json();
           currentUserId = meData.id;
           setIsOwnProfile(propUserId === meData.id);
-          setUserId(propUserId);
           // Fetch the other user's profile (FIX: use /users/<id> endpoint)
           const profileRes = await fetch(`${API_BASE_URL}/users/${propUserId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
