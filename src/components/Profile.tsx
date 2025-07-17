@@ -5,31 +5,14 @@ import IconButton from '@mui/material/IconButton';
 import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import Button from '@mui/material/Button';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import { API_BASE_URL } from '../api';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import ShareIcon from '@mui/icons-material/Share';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import Chip from '@mui/material/Chip';
-
-const mockPosts = [
-  {
-    id: 1,
-    title: 'My First Post',
-    content: 'This is my first post on GoTripping!',
-    created_at: new Date().toISOString(),
-  },
-];
+import { API_BASE_URL } from '../api';
 
 export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { isDarkTheme: boolean; onBack?: () => void; userId?: number }) {
   const { isDark } = useThemeToggle();
@@ -38,16 +21,13 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
     if (onBack) onBack();
     else navigate(-1);
   };
-  const [tab, setTab] = React.useState(0);
   const [followersCount, setFollowersCount] = React.useState<number>(0);
   const [followingCount, setFollowingCount] = React.useState<number>(0);
-  const [userId, setUserId] = React.useState<number | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [profileData, setProfileData] = React.useState<any>({});
   const [editOpen, setEditOpen] = React.useState(false);
   const [editProfile, setEditProfile] = React.useState<any>({});
-  const [editMode, setEditMode] = React.useState(false);
   const [saveLoading, setSaveLoading] = React.useState(false);
   const [saveError, setSaveError] = React.useState('');
   const [saveSuccess, setSaveSuccess] = React.useState(false);
@@ -55,10 +35,8 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
   const [userPosts, setUserPosts] = React.useState<any[]>([]);
   const [postsLoading, setPostsLoading] = React.useState(true);
   const [postsError, setPostsError] = React.useState('');
-  // Like/bookmark loading state for posts
-  const [likeLoading, setLikeLoading] = React.useState<{[key:number]:boolean}>({});
-  const [bookmarkLoading, setBookmarkLoading] = React.useState<{[key:number]:boolean}>({});
   const [isOwnProfile, setIsOwnProfile] = React.useState(true);
+  const [userId, setUserId] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     const fetchProfileAndFollows = async () => {
@@ -253,7 +231,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
         )}
       </Box>
       {isOwnProfile && (
-        <Dialog open={editOpen} onClose={() => { setEditOpen(false); setEditMode(false); setSaveError(''); setSaveSuccess(false); }} maxWidth="xs" fullWidth>
+        <Dialog open={editOpen} onClose={() => { setEditOpen(false); setSaveError(''); setSaveSuccess(false); }} maxWidth="xs" fullWidth>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogContent>
             <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
@@ -277,7 +255,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => { setEditOpen(false); setEditMode(false); setSaveError(''); setSaveSuccess(false); }}>Cancel</Button>
+            <Button onClick={() => { setEditOpen(false); setSaveError(''); setSaveSuccess(false); }}>Cancel</Button>
             <Button variant="contained" color="primary" onClick={async () => {
               setSaveLoading(true);
               setSaveError('');
