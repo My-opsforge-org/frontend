@@ -159,7 +159,7 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
         </Box>
       ) : (
         <Paper sx={{ width: '100%', height: '100%', flex: 1, display: 'flex', flexDirection: 'column', p: 0, m: 0, boxShadow: 'none', borderRadius: 0 }}>
-          <List sx={{ width: '100%', flex: 1, overflow: 'auto', p: 0 }}>
+          <List sx={{ width: '100%', flex: 1, overflow: 'auto', p: 0, paddingBottom: '64px' }}>
             {users.length === 0 ? (
               <ListItem>
                 <ListItemText primary="No people found." />

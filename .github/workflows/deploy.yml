@@ -91,6 +91,11 @@ jobs:
           sudo apt-get update && sudo apt-get install -y sshpass
           sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'sudo chown -R ${{ secrets.VM_USER }}:${{ secrets.VM_USER }} /home/${{ secrets.VM_USER }}/frontend && sudo chmod -R 755 /home/${{ secrets.VM_USER }}/frontend'
 
+      - name: Ensure frontend directory exists on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'mkdir -p /home/${{ secrets.VM_USER }}/frontend'
+
       - name: Copy build to VM
         uses: appleboy/scp-action@v0.1.7
         with:
