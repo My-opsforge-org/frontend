@@ -6,7 +6,6 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider } from '@mui/material';
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../api';
-import { useNavigate } from 'react-router-dom';
 
 export default function Header({ name, profileImage, isDarkTheme, showOptions, setShowOptions, toggleTheme, handleLogout, profileData, activeTab, setActiveTab, onProfileUpdate }: any) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
