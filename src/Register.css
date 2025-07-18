@@ -1,0 +1,155 @@
+/* Theme containers */
+.register-container.light-mode {
+  background: #f4f4f4;
+}
+.register-container.dark-mode {
+  background: #232326;
+}
+
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.register-card {
+  background: #18181a;
+  border-radius: 10px;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.18);
+  padding: 48px 40px 32px 40px;
+  width: 600px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: background 0.3s;
+}
+.register-container.light-mode .register-card {
+  background: #fff;
+}
+
+.register-title {
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 32px;
+  letter-spacing: 1px;
+}
+.register-container.light-mode .register-title {
+  color: #232326;
+}
+
+.register-label {
+  font-size: 1.05rem;
+  color: #aaa;
+  margin-bottom: 0.3rem;
+  margin-top: 1.1rem;
+  font-weight: 500;
+}
+.register-container.light-mode .register-label {
+  color: #232326;
+}
+
+.register-input {
+  padding: 0.8rem 1rem;
+  border-radius: 5px;
+  border: 1.5px solid #444;
+  background: #232326;
+  color: #fff;
+  font-size: 1.08rem;
+  margin-bottom: 0.5rem;
+  transition: border 0.2s, background 0.2s, color 0.2s;
+}
+.register-container.light-mode .register-input {
+  background: #fff;
+  color: #232326;
+  border: 1.5px solid #bbb;
+}
+.register-input:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+.register-input.error {
+  border-color: #ff4757;
+}
+
+.register-button-blue {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.95rem 0;
+  font-size: 1.13rem;
+  font-weight: 600;
+  margin-top: 1.3rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.register-button-blue:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.register-button-blue:hover:not(:disabled) {
+  background: #1251a3;
+}
+
+.register-footer-row {
+  text-align: center;
+  margin-top: 0.7rem;
+  margin-bottom: 0.7rem;
+  color: #aaa;
+  font-size: 1.05rem;
+}
+.register-container.light-mode .register-footer-row {
+  color: #232326;
+}
+
+.login-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.2rem;
+}
+.login-link:hover {
+  text-decoration: underline;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  color: #1976d2;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 auto;
+  margin-top: 0.7rem;
+  cursor: pointer;
+  display: block;
+  letter-spacing: 1px;
+  transition: color 0.2s;
+}
+.theme-toggle-btn:hover {
+  color: #1251a3;
+}
+
+.error-message {
+  color: #ff4757;
+  font-size: 0.98rem;
+  margin-bottom: 0.2rem;
+  margin-top: -0.2rem;
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .register-card {
+    padding: 24px 8px 16px 8px;
+    width: 98vw;
+    min-width: 0;
+  }
+  .register-title {
+    font-size: 1.3rem;
+  }
+} 
