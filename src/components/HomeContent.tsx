@@ -142,6 +142,14 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       if (response.ok) {
         setCommentText(t => ({...t, [postId]: ''}));
         setSnackbar({open:true, message:'Comment added!', severity:'success'});
+        // Re-fetch comments for this post to update the UI
+        const fetchResponse = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json();
+          setComments(c => ({...c, [postId]: data}));
+        }
       } else {
         setSnackbar({open:true, message:'Failed to add comment', severity:'error'});
       }

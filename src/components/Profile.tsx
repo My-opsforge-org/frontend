@@ -13,6 +13,9 @@ import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
 import Chip from '@mui/material/Chip';
 import { API_BASE_URL } from '../api';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ButtonGroup from '@mui/material/ButtonGroup';
 
 export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { isDarkTheme: boolean; onBack?: () => void; userId?: number }) {
   const { isDark } = useThemeToggle();
@@ -36,6 +39,10 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
   const [postsLoading, setPostsLoading] = React.useState(true);
   const [postsError, setPostsError] = React.useState('');
   const [isOwnProfile, setIsOwnProfile] = React.useState(true);
+  const [view, setView] = React.useState<'posts' | 'bookmarks'>('posts');
+  const [bookmarks, setBookmarks] = React.useState<any[]>([]);
+  const [bookmarksLoading, setBookmarksLoading] = React.useState(false);
+  const [bookmarksError, setBookmarksError] = React.useState('');
 
   React.useEffect(() => {
     const fetchProfileAndFollows = async () => {
@@ -123,6 +130,41 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
     };
     fetchProfileAndFollows();
   }, [navigate, propUserId]);
+
+  // Fetch bookmarks when toggled to bookmarks view
+  React.useEffect(() => {
+    if (view === 'bookmarks' && isOwnProfile) {
+      const fetchBookmarks = async () => {
+        setBookmarksLoading(true);
+        setBookmarksError('');
+        try {
+          const token = localStorage.getItem('access_token');
+          const res = await fetch(`${API_BASE_URL}/bookmarks`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.status === 401) {
+            localStorage.removeItem('access_token');
+            navigate('/login', { replace: true });
+            return;
+          }
+          const data = await res.json();
+          if (res.ok && Array.isArray(data)) {
+            setBookmarks(data);
+            setBookmarksError('');
+          } else {
+            setBookmarks([]);
+            setBookmarksError(data.error || 'Failed to load bookmarks');
+          }
+        } catch {
+          setBookmarksError('Network error');
+          setBookmarks([]);
+        } finally {
+          setBookmarksLoading(false);
+        }
+      };
+      fetchBookmarks();
+    }
+  }, [view, isOwnProfile, navigate]);
   return (
     <Box sx={{ bgcolor: isDark ? '#18191A' : '#fff', minHeight: '100vh', p: 0 }}>
       {/* Header Bar */}
@@ -184,47 +226,142 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
         </Box>
       </Box>
       {/* User's Posts Section */}
-      <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', px: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: isDark ? '#fafafa' : '#222' }}>Your Posts</Typography>
-        {postsLoading ? (
-          <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>Loading posts...</Typography>
-        ) : postsError ? (
-          <Typography sx={{ color: 'red', fontSize: 20, mb: 2, textAlign: 'center' }}>{postsError}</Typography>
-        ) : userPosts.length === 0 ? (
-          <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>You haven't posted anything yet.</Typography>
+      <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', px: 2, pb: 8 }}>
+        <ButtonGroup
+          variant="contained"
+          sx={{
+            mb: 3,
+            borderRadius: 3,
+            boxShadow: isDark ? '0 2px 8px #0006' : '0 2px 8px #bbb2',
+            overflow: 'hidden',
+            width: '100%',
+            '& .MuiButton-root': {
+              flex: 1,
+              fontWeight: 700,
+              fontSize: 18,
+              border: 'none',
+              borderRadius: 0,
+              transition: 'background 0.2s, color 0.2s',
+              color: isDark ? '#fafafa' : '#222',
+              bgcolor: isDark ? '#23272f' : '#e9e5dc',
+              '&.active': {
+                bgcolor: isDark ? '#1976d2' : '#1976d2',
+                color: '#fff',
+              },
+              '&:hover': {
+                bgcolor: isDark ? '#31343b' : '#d6d1c7',
+              },
+            },
+          }}
+          fullWidth
+        >
+          <Button
+            className={view === 'posts' ? 'active' : ''}
+            onClick={() => setView('posts')}
+            disableElevation
+            sx={{ borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}
+          >
+            Your Posts
+          </Button>
+          {isOwnProfile && (
+            <Button
+              className={view === 'bookmarks' ? 'active' : ''}
+              onClick={() => setView('bookmarks')}
+              disableElevation
+              sx={{ borderTopRightRadius: 12, borderBottomRightRadius: 12 }}
+            >
+              Bookmarks
+            </Button>
+          )}
+        </ButtonGroup>
+        {view === 'posts' ? (
+          <>
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: isDark ? '#fafafa' : '#222' }}>Your Posts</Typography>
+            {postsLoading ? (
+              <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>Loading posts...</Typography>
+            ) : postsError ? (
+              <Typography sx={{ color: 'red', fontSize: 20, mb: 2, textAlign: 'center' }}>{postsError}</Typography>
+            ) : userPosts.length === 0 ? (
+              <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>You haven't posted anything yet.</Typography>
+            ) : (
+              <Box display="flex" flexDirection="column" gap={2}>
+                {userPosts.map(post => (
+                  <Card key={post.id} sx={{ mb: 2, bgcolor: isDark ? '#23272f' : '#f9f9f9', borderRadius: 3, boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001' }}>
+                    <CardHeader
+                      avatar={<Avatar src={profileData.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}`} alt={profileData.name || 'User'} />}
+                      title={profileData.name || 'User'}
+                      subheader={new Date(post.created_at).toLocaleDateString()}
+                    />
+                    <CardContent>
+                      {post.community && (
+                        <Box mb={1}>
+                          <Chip label={post.community.name} color="secondary" size="small" sx={{ fontWeight: 700, mr: 1 }} />
+                        </Box>
+                      )}
+                      <Typography variant="h6">{post.title}</Typography>
+                      <Typography>{post.content}</Typography>
+                      {Array.isArray(post.images) && post.images.length > 0 && (
+                        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                          {post.images.map((img: any) => (
+                            <img
+                              key={img.id || img.url}
+                              src={img.url}
+                              alt={post.title}
+                              style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            )}
+          </>
         ) : (
-          <Box display="flex" flexDirection="column" gap={2}>
-            {userPosts.map(post => (
-              <Card key={post.id} sx={{ mb: 2, bgcolor: isDark ? '#23272f' : '#f9f9f9', borderRadius: 3, boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001' }}>
-                <CardHeader
-                  avatar={<Avatar src={profileData.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}`} alt={profileData.name || 'User'} />}
-                  title={profileData.name || 'User'}
-                  subheader={new Date(post.created_at).toLocaleDateString()}
-                />
-                <CardContent>
-                  {post.community && (
-                    <Box mb={1}>
-                      <Chip label={post.community.name} color="secondary" size="small" sx={{ fontWeight: 700, mr: 1 }} />
-                    </Box>
-                  )}
-                  <Typography variant="h6">{post.title}</Typography>
-                  <Typography>{post.content}</Typography>
-                  {Array.isArray(post.images) && post.images.length > 0 && (
-                    <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                      {post.images.map((img: any) => (
-                        <img
-                          key={img.id || img.url}
-                          src={img.url}
-                          alt={post.title}
-                          style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
-                        />
-                      ))}
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+          <>
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: isDark ? '#fafafa' : '#222' }}>Bookmarked Posts</Typography>
+            {bookmarksLoading ? (
+              <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>Loading bookmarks...</Typography>
+            ) : bookmarksError ? (
+              <Typography sx={{ color: 'red', fontSize: 20, mb: 2, textAlign: 'center' }}>{bookmarksError}</Typography>
+            ) : bookmarks.length === 0 ? (
+              <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>You haven't bookmarked any posts yet.</Typography>
+            ) : (
+              <Box display="flex" flexDirection="column" gap={2}>
+                {bookmarks.map(post => (
+                  <Card key={post.id} sx={{ mb: 2, bgcolor: isDark ? '#23272f' : '#f9f9f9', borderRadius: 3, boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001' }}>
+                    <CardHeader
+                      avatar={<Avatar src={post.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || 'User')}`} alt={post.author?.name || 'User'} />}
+                      title={post.author?.name || 'User'}
+                      subheader={new Date(post.created_at).toLocaleDateString()}
+                    />
+                    <CardContent>
+                      {post.community && (
+                        <Box mb={1}>
+                          <Chip label={post.community.name} color="secondary" size="small" sx={{ fontWeight: 700, mr: 1 }} />
+                        </Box>
+                      )}
+                      <Typography variant="h6">{post.title}</Typography>
+                      <Typography>{post.content}</Typography>
+                      {Array.isArray(post.images) && post.images.length > 0 && (
+                        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                          {post.images.map((img: any) => (
+                            <img
+                              key={img.id || img.url}
+                              src={img.url}
+                              alt={post.title}
+                              style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            )}
+          </>
         )}
       </Box>
       {isOwnProfile && (

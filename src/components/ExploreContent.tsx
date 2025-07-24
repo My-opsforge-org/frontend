@@ -1,4 +1,4 @@
-import { Box, Typography, Button, TextField, CircularProgress, List, ListItem, ListItemText, Paper, Divider, ListItemSecondaryAction, IconButton } from '@mui/material';
+import { Box, Typography, Button, TextField, CircularProgress, List, ListItem, ListItemText, Paper, Divider, ListItemSecondaryAction, IconButton, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { useEffect, useState } from 'react';
@@ -17,15 +17,15 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
   const [geocodeResult, setGeocodeResult] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [geocodeLoading] = useState(false);
   const [geocodeError] = useState('');
+  const [radius, setRadius] = useState(1500); // meters
+  const [type, setType] = useState('tourist_attraction');
 
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          // Only auto-search if no address or manual search has been done
           if (!address && !geocodeResult && !places.length) {
-            // Try to get the address from coordinates (reverse geocoding)
             try {
               const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
               const data = await response.json();
@@ -38,13 +38,12 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
               setAddress(`${pos.coords.latitude},${pos.coords.longitude}`);
             }
             setGeocodeResult({ lat: pos.coords.latitude, lng: pos.coords.longitude, address: `${pos.coords.latitude},${pos.coords.longitude}` });
-            // Auto-load places on first render
             setPlacesError('');
             setPlaces([]);
             setPlacesLoading(true);
             try {
               const token = localStorage.getItem('access_token');
-              const response = await fetch(`${API_BASE_URL}/explore/places?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&radius=5000&type=tourist_attraction`, {
+              const response = await fetch(`${API_BASE_URL}/explore/places?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&radius=${radius}&type=${type}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
               });
               const data = await response.json();
@@ -66,7 +65,7 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
       setError('Geolocation is not supported by this browser');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [radius, type]);
 
   const handleGetPlaces = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +77,6 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
     let usedAddress = address.trim();
     try {
       if (usedAddress) {
-        // Geocode the address first
         const token = localStorage.getItem('access_token');
         const geocodeResponse = await fetch(`${API_BASE_URL}/explore/geocode?address=` + encodeURIComponent(usedAddress), {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -106,7 +104,7 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
         return;
       }
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/explore/places?lat=${lat}&lng=${lng}&radius=5000&type=tourist_attraction`, {
+      const response = await fetch(`${API_BASE_URL}/explore/places?lat=${lat}&lng=${lng}&radius=${radius}&type=${type}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -127,15 +125,54 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
       {error && (
         <Typography mt={2} color="error.main">{error}</Typography>
       )}
-      <Box component="form" onSubmit={handleGetPlaces} mt={4} display="flex" gap={2} alignItems="center" width="100%" maxWidth="700px">
+      <Box component="form" onSubmit={handleGetPlaces} mt={4} display="flex" gap={2} alignItems="center" width="100%" maxWidth="900px">
         <TextField
           label="Address"
           value={address}
           onChange={e => setAddress(e.target.value)}
           size="small"
-          sx={{ flex: 1, minWidth: 220 }}
+          sx={{ flex: 3, minWidth: 180 }}
         />
-        <Button type="submit" variant="contained" color="primary" disabled={geocodeLoading || placesLoading} sx={{ ml: 2, minWidth: 120 }}>
+        <FormControl size="small" sx={{ flex: 2, minWidth: 120 }}>
+          <InputLabel id="type-label">Type</InputLabel>
+          <Select
+            labelId="type-label"
+            value={type}
+            label="Type"
+            onChange={e => setType(e.target.value)}
+          >
+            <MenuItem value="tourist_attraction">Tourist Attraction</MenuItem>
+            <MenuItem value="restaurant">Restaurant</MenuItem>
+            <MenuItem value="park">Park</MenuItem>
+            <MenuItem value="museum">Museum</MenuItem>
+            <MenuItem value="cafe">Cafe</MenuItem>
+            <MenuItem value="shopping_mall">Shopping Mall</MenuItem>
+            <MenuItem value="night_club">Night Club</MenuItem>
+            <MenuItem value="art_gallery">Art Gallery</MenuItem>
+            <MenuItem value="zoo">Zoo</MenuItem>
+            <MenuItem value="amusement_park">Amusement Park</MenuItem>
+            <MenuItem value="lodging">Lodging</MenuItem>
+            <MenuItem value="bar">Bar</MenuItem>
+            <MenuItem value="church">Church</MenuItem>
+            <MenuItem value="hindu_temple">Hindu Temple</MenuItem>
+            <MenuItem value="mosque">Mosque</MenuItem>
+            <MenuItem value="synagogue">Synagogue</MenuItem>
+            <MenuItem value="movie_theater">Movie Theater</MenuItem>
+            <MenuItem value="aquarium">Aquarium</MenuItem>
+            <MenuItem value="library">Library</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          label="Radius (meters)"
+          type="number"
+          value={radius}
+          onChange={e => setRadius(Number(e.target.value))}
+          size="small"
+          sx={{ flex: 1, minWidth: 100 }}
+          inputProps={{ min: 100, max: 50000, step: 100 }}
+        />
+        <Button type="submit" variant="contained" color="primary" disabled={geocodeLoading || placesLoading} sx={{ flex: 1, minWidth: 120 }}>
           {geocodeLoading || placesLoading ? <CircularProgress size={20} /> : 'Get Places'}
         </Button>
       </Box>
@@ -143,10 +180,16 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
         <Typography mt={2} color="error.main">{geocodeError}</Typography>
       )}
       {geocodeResult && (
-        <Paper sx={{ mt: 3, width: '100%', maxWidth: 500, p: 2 }}>
-          <Typography variant="subtitle1" mb={1}>Coordinates for: <b>{geocodeResult.address}</b></Typography>
-          <Typography>Latitude: {geocodeResult.lat.toFixed(6)}</Typography>
-          <Typography>Longitude: {geocodeResult.lng.toFixed(6)}</Typography>
+        <Paper sx={{ mt: 3, width: '100%', maxWidth: 900, p: 3, bgcolor: isDarkTheme ? '#23272f' : '#f5f5f5', boxShadow: 1, borderRadius: 2 }}>
+          <Typography variant="h6" mb={1} sx={{ fontWeight: 700, wordBreak: 'break-word' }}>
+            {geocodeResult.address}
+          </Typography>
+          <Box display="flex" gap={4} flexWrap="wrap">
+            <Typography>Latitude: {geocodeResult.lat.toFixed(6)}</Typography>
+            <Typography>Longitude: {geocodeResult.lng.toFixed(6)}</Typography>
+            <Typography>Radius: {radius} meters</Typography>
+            <Typography>Type: {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</Typography>
+          </Box>
           <Divider sx={{ my: 2, borderColor: isDarkTheme ? '#444' : '#bbb', borderBottomWidth: 2, borderRadius: 2 }} />
         </Paper>
       )}
