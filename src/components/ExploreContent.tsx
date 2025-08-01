@@ -15,8 +15,7 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
   const [placesError, setPlacesError] = useState('');
   const [address, setAddress] = useState('');
   const [geocodeResult, setGeocodeResult] = useState<{lat: number, lng: number, address: string} | null>(null);
-  const [geocodeLoading] = useState(false);
-  const [geocodeError] = useState('');
+
   const [radius, setRadius] = useState(1500); // meters
   const [type, setType] = useState('tourist_attraction');
 
