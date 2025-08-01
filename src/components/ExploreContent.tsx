@@ -15,6 +15,8 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
   const [placesError, setPlacesError] = useState('');
   const [address, setAddress] = useState('');
   const [geocodeResult, setGeocodeResult] = useState<{lat: number, lng: number, address: string} | null>(null);
+  const [geocodeLoading, setGeocodeLoading] = useState(false);
+  const [geocodeError, setGeocodeError] = useState('');
 
   const [radius, setRadius] = useState(1500); // meters
   const [type, setType] = useState('tourist_attraction');
@@ -69,8 +71,10 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
   const handleGetPlaces = async (e: React.FormEvent) => {
     e.preventDefault();
     setPlacesError('');
+    setGeocodeError('');
     setPlaces([]);
     setPlacesLoading(true);
+    setGeocodeLoading(true);
     let lat: number | null = null;
     let lng: number | null = null;
     let usedAddress = address.trim();
@@ -86,8 +90,9 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
           lng = geocodeData.longitude;
           setGeocodeResult({ lat: lat as number, lng: lng as number, address: geocodeData.address });
         } else {
-          setPlacesError(geocodeData.error || 'Could not find coordinates for the address');
+          setGeocodeError(geocodeData.error || 'Could not find coordinates for the address');
           setPlacesLoading(false);
+          setGeocodeLoading(false);
           return;
         }
       } else if (location) {
@@ -100,6 +105,7 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
       if (typeof lat !== 'number' || typeof lng !== 'number') {
         setPlacesError('No location available');
         setPlacesLoading(false);
+        setGeocodeLoading(false);
         return;
       }
       const token = localStorage.getItem('access_token');
@@ -116,6 +122,7 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
       setPlacesError('Network error');
     } finally {
       setPlacesLoading(false);
+      setGeocodeLoading(false);
     }
   };
 
