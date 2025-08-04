@@ -10,6 +10,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [showOptions, setShowOptions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { isDark, toggleTheme } = useThemeToggle();
   const [name, setName] = useState('User');
   const [profileImage, setProfileImage] = useState('https://ui-avatars.com/api/?name=User');
@@ -53,14 +54,64 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
+      <Box 
+        sx={{
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          background: isDark 
+            ? 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)'
+            : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDark 
+              ? 'radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          }
+        }}
+      >
+        <CircularProgress 
+          sx={{ 
+            color: '#6366f1',
+            '& .MuiCircularProgress-circle': {
+              strokeLinecap: 'round',
+            }
+          }} 
+        />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ bgcolor: isDark ? '#1C1C1E' : '#F8F9FA', minHeight: '100vh', position: 'relative' }}>
+    <Box 
+      sx={{ 
+        minHeight: '100vh', 
+        position: 'relative',
+        background: isDark 
+          ? 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: isDark 
+            ? 'radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)'
+            : 'radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)',
+          pointerEvents: 'none',
+        }
+      }}
+    >
       <Header
         name={name}
         profileImage={profileImage}
@@ -72,13 +123,15 @@ export default function Home() {
         profileData={profileData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
         onProfileUpdate={(newProfile: any) => {
           setProfileData(newProfile);
           setName(newProfile.name || 'User');
           setProfileImage(newProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(newProfile.name || 'User')}`);
         }}
       />
-      <Content isDarkTheme={isDark} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Content isDarkTheme={isDark} activeTab={activeTab} setActiveTab={setActiveTab} searchQuery={searchQuery} />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isDarkTheme={isDark} />
     </Box>
   );

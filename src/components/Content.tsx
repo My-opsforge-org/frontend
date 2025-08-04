@@ -5,10 +5,11 @@ import HomeContent from './HomeContent';
 import PeopleContent from './PeopleContent';
 import Profile from './Profile';
 
-export default function Content({ isDarkTheme, activeTab, setActiveTab }: {
+export default function Content({ isDarkTheme, activeTab, setActiveTab, searchQuery }: {
   isDarkTheme: boolean;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  searchQuery?: string;
 }) {
   switch (activeTab) {
     case 'home':
@@ -18,9 +19,9 @@ export default function Content({ isDarkTheme, activeTab, setActiveTab }: {
     case 'people':
       return <PeopleContent isDarkTheme={isDarkTheme} />;
     case 'connect':
-      return <ChatContent isDarkTheme={isDarkTheme} />;
+      return <ChatContent isDarkTheme={isDarkTheme} searchQuery={searchQuery} />;
     case 'community':
-      return <CommunityContent isDarkTheme={isDarkTheme} />;
+      return <CommunityContent isDarkTheme={isDarkTheme} searchQuery={searchQuery} />;
     case 'profile':
       return <Profile isDarkTheme={isDarkTheme} onBack={() => setActiveTab('home')} />;
     default:

@@ -1,6 +1,7 @@
-import { Box, Typography, Button, TextField, CircularProgress, List, ListItem, ListItemText, Paper, Divider, ListItemSecondaryAction, IconButton, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { Box, Typography, Button, TextField, CircularProgress, List, ListItem, ListItemText, Paper, Divider, ListItemSecondaryAction, IconButton, Select, MenuItem, InputLabel, FormControl, useTheme, useMediaQuery } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import DirectionsIcon from '@mui/icons-material/Directions';
+import SearchIcon from '@mui/icons-material/Search';
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api';
 import MuiBox from '@mui/material/Box';
@@ -8,6 +9,8 @@ import Avatar from '@mui/material/Avatar';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 
 export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }) {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [error, setError] = useState('');
   const [places, setPlaces] = useState<any[]>([]);
@@ -178,9 +181,29 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
           sx={{ flex: 1, minWidth: 100 }}
           inputProps={{ min: 100, max: 50000, step: 100 }}
         />
-        <Button type="submit" variant="contained" color="primary" disabled={geocodeLoading || placesLoading} sx={{ flex: 1, minWidth: 120 }}>
-          {geocodeLoading || placesLoading ? <CircularProgress size={20} /> : 'Get Places'}
-        </Button>
+        {isSmallScreen ? (
+          <IconButton 
+            type="submit" 
+            color="primary" 
+            disabled={geocodeLoading || placesLoading}
+            sx={{ 
+              bgcolor: 'primary.main',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'primary.dark'
+              },
+              '&:disabled': {
+                bgcolor: 'action.disabledBackground'
+              }
+            }}
+          >
+            {geocodeLoading || placesLoading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
+          </IconButton>
+        ) : (
+          <Button type="submit" variant="contained" color="primary" disabled={geocodeLoading || placesLoading} sx={{ flex: 1, minWidth: 120 }}>
+            {geocodeLoading || placesLoading ? <CircularProgress size={20} /> : 'Get Places'}
+          </Button>
+        )}
       </Box>
       {geocodeError && (
         <Typography mt={2} color="error.main">{geocodeError}</Typography>

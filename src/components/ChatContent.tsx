@@ -28,7 +28,6 @@ import {
 import {
   Send as SendIcon,
   Search as SearchIcon,
-  Add as AddIcon,
   AttachFile as AttachFileIcon,
   EmojiEmotions as EmojiIcon,
   Videocam as VideoIcon,
@@ -86,15 +85,12 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
+export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme: boolean; searchQuery?: string }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-  const [newChatName, setNewChatName] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [tabValue, setTabValue] = useState(0);
   const [conversationsLoading, setConversationsLoading] = useState(false);
@@ -106,6 +102,13 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   useEffect(() => {
     loadConversations();
     loadUsers();
+    
+    // Check if user came from search field and switch to "All Users" tab
+    const searchClicked = localStorage.getItem('searchClicked');
+    if (searchClicked === 'true') {
+      setTabValue(1); // Switch to "All Users" tab
+      localStorage.removeItem('searchClicked'); // Clear the flag
+    }
   }, []);
 
   // Initialize Socket.IO connection when component mounts
@@ -287,27 +290,13 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
     }
   };
 
-  const filteredConversations = searchConversations(conversations, searchQuery);
+  const filteredConversations = searchConversations(conversations, searchQuery || '');
   const filteredUsers = users.filter(user => 
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    user.name?.toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+    user.email?.toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
-  const handleNewChat = () => {
-    if (newChatName.trim()) {
-      const newConversation = createNewConversation(newChatName);
-      setConversations(prev => sortConversations([newConversation, ...prev]));
-      setNewChatName('');
-      setShowNewChatDialog(false);
-      // Convert conversation to user format
-      setSelectedUser({
-        id: parseInt(newConversation.id),
-        name: newConversation.name,
-        avatar: newConversation.avatar,
-        isOnline: newConversation.isOnline
-      });
-    }
-  };
+
 
   const handleStartChatWithUser = (user: User) => {
     setSelectedUser({
@@ -347,7 +336,8 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
         height: 'calc(100vh - 136px)', 
         display: 'flex', 
         flexDirection: 'column',
-        position: 'relative'
+        position: 'relative',
+        pb: 10 // Add bottom padding to account for bottom navigation
       }}>
         {/* Chat Header */}
         <Paper 
@@ -499,39 +489,51 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       height: 'calc(100vh - 136px)', 
       display: 'flex', 
       flexDirection: 'column',
-      position: 'relative'
+      position: 'relative',
+      pb: 10 // Add bottom padding to account for bottom navigation
     }}>
       {/* Header */}
-      <Paper 
-        elevation={1} 
-        sx={{ 
-          p: 2, 
-          bgcolor: isDarkTheme ? '#2C2C2E' : '#fff',
-          flexShrink: 0
+      <Box
+        sx={{
+          py: 1.5,
+          px: 2,
+          background: isDarkTheme
+            ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(15, 15, 35, 0.7) 100%)'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 250, 252, 0.8) 100%)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: isDarkTheme
+            ? '1px solid rgba(255, 255, 255, 0.08)'
+            : '1px solid rgba(99, 102, 241, 0.08)',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkTheme
+              ? 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          }
         }}
       >
-        <Typography variant="h5" color={isDarkTheme ? 'white' : 'black'} sx={{ mb: 2 }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            letterSpacing: 0.3,
+            color: isDarkTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(31, 41, 55, 0.9)',
+            textAlign: 'left',
+            position: 'relative',
+            zIndex: 1,
+            fontSize: '1.1rem'
+          }}
+        >
           Messages
         </Typography>
-        <TextField
-          fullWidth
-          placeholder="Search conversations or users..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              bgcolor: isDarkTheme ? '#1C1C1E' : '#fff'
-            }
-          }}
-        />
-      </Paper>
+      </Box>
 
       {/* Tabs */}
       <Paper 
@@ -676,7 +678,7 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
 
       <TabPanel value={tabValue} index={1}>
         {/* Users List */}
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <Box sx={{ flex: 1, overflow: 'auto', pb: 10 }}>
           {usersLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
               <Typography>Loading users...</Typography>
@@ -742,58 +744,7 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       </Box>
       </TabPanel>
 
-      {/* New Chat FAB */}
-      <Fab
-        color="primary"
-        aria-label="new chat"
-        onClick={() => setShowNewChatDialog(true)}
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          right: 16,
-          bgcolor: '#007AFF'
-        }}
-      >
-        <AddIcon />
-      </Fab>
 
-      {/* New Chat Dialog */}
-      <Dialog 
-        open={showNewChatDialog} 
-        onClose={() => setShowNewChatDialog(false)}
-        PaperProps={{
-          sx: { bgcolor: isDarkTheme ? '#2C2C2E' : '#fff' }
-        }}
-      >
-        <DialogTitle color={isDarkTheme ? 'white' : 'black'}>
-          New Chat
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="User ID"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={newChatName}
-            onChange={(e) => setNewChatName(e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                bgcolor: isDarkTheme ? '#1C1C1E' : '#fff'
-              }
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowNewChatDialog(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleNewChat} variant="contained">
-            Start Chat
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 } 

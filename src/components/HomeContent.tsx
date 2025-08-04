@@ -239,61 +239,247 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
         <Typography align="center" color="text.secondary">No posts yet. Be the first to share something!</Typography>
       ) : (
         posts.map((post: Post) => (
-          <Card key={post.id} sx={{ mb: 2 }}>
+          <Card 
+            key={post.id} 
+            sx={{ 
+              mb: 3,
+              borderRadius: 4,
+              background: isDarkTheme 
+                ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              boxShadow: isDarkTheme
+                ? '0 8px 32px rgba(0, 0, 0, 0.3)'
+                : '0 8px 32px rgba(0, 0, 0, 0.08)',
+              border: isDarkTheme 
+                ? '1px solid rgba(255, 255, 255, 0.1)' 
+                : '1px solid rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkTheme
+                  ? '0 16px 48px rgba(0, 0, 0, 0.4)'
+                  : '0 16px 48px rgba(0, 0, 0, 0.12)',
+              },
+              animation: 'fadeIn 0.6s ease-out',
+            }}
+          >
             <CardHeader
-              avatar={<Avatar src={post.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || 'User')}`} alt={post.author?.name || 'User'} />}
-              title={post.author?.name || 'User'}
-              subheader={new Date(post.created_at).toLocaleDateString()}
+              avatar={
+                <Avatar 
+                  src={post.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || 'User')}`} 
+                  alt={post.author?.name || 'User'} 
+                  sx={{ 
+                    width: 56, 
+                    height: 56,
+                    border: '3px solid',
+                    borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+                    boxShadow: isDarkTheme
+                      ? '0 4px 16px rgba(0, 0, 0, 0.3)'
+                      : '0 4px 16px rgba(99, 102, 241, 0.2)',
+                  }} 
+                />
+              }
+              title={
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 700,
+                    background: isDarkTheme
+                      ? 'linear-gradient(135deg, #ffffff, #e2e8f0)'
+                      : 'linear-gradient(135deg, #1f2937, #374151)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  {post.author?.name || 'User'}
+                </Typography>
+              }
+              subheader={
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    opacity: 0.7,
+                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                    fontWeight: 500,
+                  }}
+                >
+                  {new Date(post.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Typography>
+              }
+              sx={{
+                pb: 1,
+                '& .MuiCardHeader-content': {
+                  overflow: 'hidden',
+                }
+              }}
             />
-            <CardContent>
+            <CardContent sx={{ pt: 0 }}>
               {post.community && (
-                <Box mb={1}>
-                  <Chip label={post.community.name} color="secondary" size="small" sx={{ fontWeight: 700, mr: 1 }} />
+                <Box mb={2}>
+                  <Chip 
+                    label={post.community.name} 
+                    size="small" 
+                    sx={{ 
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                      color: 'white',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                      },
+                      transition: 'all 0.2s ease',
+                    }} 
+                  />
                 </Box>
               )}
-              <Typography variant="h6">{post.title}</Typography>
-              <Typography>{post.content}</Typography>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 700,
+                  mb: 2,
+                  background: isDarkTheme
+                    ? 'linear-gradient(135deg, #ffffff, #e2e8f0)'
+                    : 'linear-gradient(135deg, #1f2937, #374151)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                {post.title}
+              </Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  lineHeight: 1.6,
+                  color: isDarkTheme ? '#e2e8f0' : '#374151',
+                  mb: 2,
+                }}
+              >
+                {post.content}
+              </Typography>
               {Array.isArray(post.images) && post.images.length > 0 && (
-                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ 
+                  mt: 2, 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 2,
+                  '& img': {
+                    borderRadius: 3,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                    }
+                  }
+                }}>
                   {post.images.map((img: any) => (
                     <img
                       key={img.id || img.url}
                       src={img.url}
                       alt={post.title}
-                      style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
+                      style={{ maxWidth: '100%', maxHeight: 200 }}
                     />
                   ))}
                 </Box>
               )}
             </CardContent>
-            <Box display="flex" alignItems="center" px={2} pb={1}>
-              <Tooltip title="Like">
+            <Box 
+              display="flex" 
+              alignItems="center" 
+              px={3} 
+              pb={2}
+              sx={{
+                borderTop: '1px solid',
+                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                pt: 2,
+              }}
+            >
+              <Tooltip title="Like" arrow>
                 <span>
-                  <IconButton onClick={() => handleLike(post.id)} disabled={likeLoading[post.id] || post.is_liked} color={post.is_liked ? 'primary' : 'default'}>
+                  <IconButton 
+                    onClick={() => handleLike(post.id)} 
+                    disabled={likeLoading[post.id] || post.is_liked} 
+                    sx={{
+                      color: post.is_liked ? '#ef4444' : (isDarkTheme ? '#9ca3af' : '#6b7280'),
+                      '&:hover': {
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
                     {post.is_liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                   </IconButton>
                 </span>
               </Tooltip>
-              <Typography variant="body2" sx={{ mr: 2 }}>{post.likes_count || 0}</Typography>
-              <Tooltip title="Bookmark">
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  mr: 3,
+                  fontWeight: 600,
+                  color: isDarkTheme ? '#e2e8f0' : '#374151',
+                }}
+              >
+                {post.likes_count || 0}
+              </Typography>
+              <Tooltip title="Bookmark" arrow>
                 <span>
-                  <IconButton onClick={() => handleBookmark(post.id, !!post.is_bookmarked)} disabled={bookmarkLoading[post.id]} color={!!post.is_bookmarked ? 'primary' : 'default'}>
+                  <IconButton 
+                    onClick={() => handleBookmark(post.id, !!post.is_bookmarked)} 
+                    disabled={bookmarkLoading[post.id]} 
+                    sx={{
+                      color: post.is_bookmarked ? '#f59e0b' : (isDarkTheme ? '#9ca3af' : '#6b7280'),
+                      '&:hover': {
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
                     {post.is_bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
                   </IconButton>
                 </span>
               </Tooltip>
-              <Tooltip title="Share">
-                <IconButton onClick={() => handleShare(post.id)}>
+              <Tooltip title="Share" arrow>
+                <IconButton 
+                  onClick={() => handleShare(post.id)}
+                  sx={{
+                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                    '&:hover': {
+                      background: 'rgba(99, 102, 241, 0.1)',
+                      transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
                   <ShareIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Comment">
-                <IconButton onClick={() => openCommentsModal(post.id)}>
+              <Tooltip title="Comment" arrow>
+                <IconButton 
+                  onClick={() => openCommentsModal(post.id)}
+                  sx={{
+                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                    '&:hover': {
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
                   <ChatBubbleOutlineIcon />
                 </IconButton>
               </Tooltip>
             </Box>
-            <Box px={2} pb={2}>
+            <Box px={3} pb={3}>
               <TextField
                 size="small"
                 placeholder="Add a comment..."

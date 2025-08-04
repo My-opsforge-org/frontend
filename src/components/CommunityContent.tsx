@@ -1,4 +1,4 @@
-import { Box, Typography, Button, CircularProgress, TextField } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, TextField, Paper, List } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api';
 import FAB from './FAB';
@@ -27,7 +27,7 @@ interface Post {
   image_urls?: string[];
 }
 
-export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean }) {
+export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkTheme: boolean; searchQuery?: string }) {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -228,6 +228,11 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
     setCreatingCommunity(false);
   };
 
+  // Filter communities based on search query from header
+  const filteredCommunities = communities.filter(community =>
+    !searchQuery || community.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Render
   if (loading || !profile) {
     return (
@@ -238,17 +243,69 @@ export default function CommunityContent({ isDarkTheme }: { isDarkTheme: boolean
   }
 
   return (
-    <Box>
+    <Box display="flex" flexDirection="column" alignItems="stretch" justifyContent="flex-start" width="100%" height="100%" minHeight="100vh" bgcolor={isDarkTheme ? '#222' : '#fafafa'}>
       {!selectedCommunity ? (
         <>
-          <CommunityList
-            communities={communities}
-            actionLoading={actionLoading}
-            handleJoinLeave={handleJoinLeave}
-            handleSelectCommunity={handleSelectCommunity}
-            selectedCommunity={selectedCommunity}
-            isDarkTheme={isDarkTheme}
-          />
+          {/* Header */}
+          <Box
+            sx={{
+              py: 1.5,
+              px: 2,
+              background: isDarkTheme
+                ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(15, 15, 35, 0.7) 100%)'
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 250, 252, 0.8) 100%)',
+              backdropFilter: 'blur(10px)',
+              borderBottom: isDarkTheme
+                ? '1px solid rgba(255, 255, 255, 0.08)'
+                : '1px solid rgba(99, 102, 241, 0.08)',
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: isDarkTheme
+                  ? 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'
+                  : 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%)',
+                pointerEvents: 'none',
+              }
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 600,
+                letterSpacing: 0.3,
+                color: isDarkTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(31, 41, 55, 0.9)',
+                textAlign: 'left',
+                position: 'relative',
+                zIndex: 1,
+                fontSize: '1.1rem'
+              }}
+            >
+              Communities
+            </Typography>
+          </Box>
+          <Paper sx={{ width: '100%', height: '100%', flex: 1, display: 'flex', flexDirection: 'column', p: 0, m: 0, boxShadow: 'none', borderRadius: 0 }}>
+            <List sx={{ width: '100%', flex: 1, overflow: 'auto', p: 0, paddingBottom: '64px' }}>
+              {filteredCommunities.length === 0 ? (
+                <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+                  {searchQuery ? `No communities found matching "${searchQuery}".` : 'No communities found.'}
+                </Typography>
+              ) : (
+                <CommunityList
+                  communities={filteredCommunities}
+                  actionLoading={actionLoading}
+                  handleJoinLeave={handleJoinLeave}
+                  handleSelectCommunity={handleSelectCommunity}
+                  selectedCommunity={selectedCommunity}
+                  isDarkTheme={isDarkTheme}
+                />
+              )}
+            </List>
+          </Paper>
         </>
       ) : (
         <CommunityPosts

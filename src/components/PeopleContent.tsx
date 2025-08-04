@@ -146,9 +146,48 @@ export default function PeopleContent({ isDarkTheme }: { isDarkTheme: boolean })
 
   return (
     <Box display="flex" flexDirection="column" alignItems="stretch" justifyContent="flex-start" width="100%" height="100%" minHeight="100vh" bgcolor={isDarkTheme ? '#222' : '#fafafa'}>
-      <Typography variant="h5" color={isDarkTheme ? 'white' : 'black'} gutterBottom sx={{ p: 2 }}>
-        People
-      </Typography>
+      {/* Header */}
+      <Box
+        sx={{
+          py: 1.5,
+          px: 2,
+          background: isDarkTheme
+            ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(15, 15, 35, 0.7) 100%)'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 250, 252, 0.8) 100%)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: isDarkTheme
+            ? '1px solid rgba(255, 255, 255, 0.08)'
+            : '1px solid rgba(99, 102, 241, 0.08)',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkTheme
+              ? 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          }
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            letterSpacing: 0.3,
+            color: isDarkTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(31, 41, 55, 0.9)',
+            textAlign: 'left',
+            position: 'relative',
+            zIndex: 1,
+            fontSize: '1.1rem'
+          }}
+        >
+          People
+        </Typography>
+      </Box>
       {loading ? (
         <Box flex={1} display="flex" alignItems="center" justifyContent="center">
           <CircularProgress color={isDarkTheme ? 'inherit' : 'primary'} />
