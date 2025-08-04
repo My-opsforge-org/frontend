@@ -59,24 +59,23 @@ export class ChatService {
       });
 
       this.socket.on('connect', () => {
-        console.log('Socket connected successfully:', this.socket?.id);
+        // Socket connected successfully
       });
 
       this.socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+        // Socket disconnected
       });
 
       this.socket.on('connect_error', (error: any) => {
-        console.error('Socket connection error:', error);
+        // Socket connection error
       });
 
       this.socket.on('receive_message', (message: any) => {
-        console.log('Received message via Socket.IO:', message);
+        // Received message via Socket.IO
       });
 
       return this.socket;
     } catch (error) {
-      console.error('Error initializing socket:', error);
       return null;
     }
   }
@@ -174,8 +173,8 @@ export class ChatService {
         id: msg.id,
         text: msg.content,
         sender: msg.sender_id === currentUserId ? 'me' : 'other',
-        timestamp: new Date(msg.createdAt),
-        isRead: msg.is_read,
+        timestamp: new Date(msg.createdAt || Date.now()),
+        isRead: msg.is_read || false,
         type: 'text'
       }));
 
@@ -209,25 +208,26 @@ export class ChatService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response error:', errorText);
         throw new Error(`Failed to send message: ${response.status} ${errorText}`);
       }
 
-      const nodeMessage: NodeMessage = await response.json();
+      const responseData = await response.json();
+      
+      // Handle the backend response format which has a data wrapper
+      const nodeMessage: NodeMessage = responseData.data || responseData;
       
       // Convert to frontend format
       const message: Message = {
         id: nodeMessage.id,
-        text: nodeMessage.content,
+        text: nodeMessage.content || '',
         sender: 'me',
-        timestamp: new Date(nodeMessage.createdAt),
-        isRead: nodeMessage.is_read,
+        timestamp: new Date(nodeMessage.createdAt || Date.now()),
+        isRead: nodeMessage.is_read || false,
         type: 'text'
       };
 
       return { success: true, data: message };
     } catch (error) {
-      console.error('Error in sendMessage:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -316,7 +316,6 @@ export class ChatService {
       const currentUserId = this.getCurrentUserId();
       
       if (!currentUserId) {
-        console.error('No current user ID found');
         throw new Error('User not authenticated');
       }
 
@@ -327,7 +326,6 @@ export class ChatService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('getConversations error:', errorText);
         throw new Error(`Failed to fetch conversations: ${response.status} ${errorText}`);
       }
 
@@ -337,18 +335,17 @@ export class ChatService {
       const conversations: Conversation[] = backendConversations.map((conv: any) => ({
         id: conv.id.toString(),
         name: conv.name,
-        avatar: conv.avatarUrl || '',
+        avatar: conv.avatar || '',
         lastMessage: conv.lastMessage,
-        lastMessageTime: new Date(conv.lastMessageTime),
+        lastMessageTime: new Date(conv.timestamp),
         unreadCount: conv.unreadCount,
-        isOnline: conv.isOnline,
+        isOnline: false, // Default to false since we don't track online status
         participants: [conv.id.toString(), 'me'],
-        isGroup: conv.isGroup
+        isGroup: false // Default to false since we're only handling direct messages
       }));
 
       return { success: true, data: conversations };
     } catch (error) {
-      console.error('Error in getConversations:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -423,11 +420,9 @@ export class ChatService {
         return { success: true, data: true };
       } else {
         const errorText = await response.text();
-        console.error('Simple POST test error:', errorText);
         return { success: false, error: errorText };
       }
     } catch (error) {
-      console.error('Simple POST test error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -454,12 +449,10 @@ export class ChatService {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('POST test error:', errorText);
       }
       
       return { success: true, data: true };
     } catch (error) {
-      console.error('POST test error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -486,11 +479,9 @@ export class ChatService {
         return { success: true, data: true };
       } else {
         const errorText = await response.text();
-        console.error('Auth test error:', errorText);
         return { success: false, error: `Auth failed: ${response.status} ${errorText}` };
       }
     } catch (error) {
-      console.error('Auth test error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -510,7 +501,6 @@ export class ChatService {
       
       return { success: true, data: true };
     } catch (error) {
-      console.error('Chat endpoint test error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -530,14 +520,11 @@ export class ChatService {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Backend connection test successful:', data);
         return { success: true, data: true };
       } else {
-        console.error('Backend connection test failed:', response.status);
         return { success: false, error: `Backend not accessible: ${response.status}` };
       }
     } catch (error) {
-      console.error('Backend connection test error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 

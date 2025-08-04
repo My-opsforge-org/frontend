@@ -138,13 +138,23 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       
       // Listen for real-time messages
       ChatService.onReceiveMessage((nodeMessage) => {
+        // Don't add messages sent by the current user (they're already added via HTTP API)
+        if (nodeMessage.sender_id === currentUserId) {
+          return;
+        }
+        
+        // Don't add empty messages
+        if (!nodeMessage.content || nodeMessage.content.trim() === '') {
+          return;
+        }
+        
         // Convert Node.js message format to frontend format
         const message: Message = {
           id: nodeMessage.id,
           text: nodeMessage.content,
           sender: nodeMessage.sender_id === currentUserId ? 'me' : 'other',
-          timestamp: new Date(nodeMessage.createdAt),
-          isRead: nodeMessage.is_read,
+          timestamp: new Date(nodeMessage.createdAt || Date.now()),
+          isRead: nodeMessage.is_read || false,
           type: 'text'
         };
         
@@ -223,9 +233,7 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   };
 
   const handleSendMessage = async () => {
-    
     if (newMessage.trim() && selectedUser) {
-      
       try {
         const response = await ChatService.sendMessage(selectedUser.id, newMessage.trim());
         
@@ -236,21 +244,25 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
         }
         
         if (response.success && response.data) {
+          // Add the message immediately from HTTP API response
+          const sentMessage = response.data;
           
-          setMessages(prev => {
-            const newMessages = [...prev, response.data!];
-            return newMessages;
-          });
+          // Ensure the message has valid text content
+          if (!sentMessage.text || sentMessage.text.trim() === '') {
+            sentMessage.text = newMessage.trim();
+          }
           
-      setNewMessage('');
+          setMessages(prev => [...prev, sentMessage]);
+          
+          setNewMessage('');
+          
+          // Update conversation's last message
+          setConversations(prev => updateConversationLastMessage(prev, selectedUser.id.toString(), sentMessage.text));
       
-      // Update conversation's last message
-          setConversations(prev => updateConversationLastMessage(prev, selectedUser.id.toString(), newMessage));
-      
-      // Scroll to bottom
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+          // Scroll to bottom
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
         } else {
           // Fallback to local state update
           const message = createNewMessage(newMessage, 'me');
@@ -265,7 +277,6 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
         setNewMessage('');
         setConversations(prev => updateConversationLastMessage(prev, selectedUser.id.toString(), newMessage));
       }
-    } else {
     }
   };
 
@@ -387,13 +398,13 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
             </Box>
           ) : (
             messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwnMessage={message.sender === 'me'}
-              isDarkTheme={isDarkTheme}
-              onDownload={handleDownload}
-            />
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isOwnMessage={message.sender === 'me'}
+                isDarkTheme={isDarkTheme}
+                onDownload={handleDownload}
+              />
             ))
           )}
           <div ref={messagesEndRef} />
@@ -721,7 +732,7 @@ export default function ChatContent({ isDarkTheme }: { isDarkTheme: boolean }) {
                         color: 'white',
                         fontWeight: 'bold'
                       }}
-                    />
+                />
               </ListItem>
                   <Divider />
             </React.Fragment>

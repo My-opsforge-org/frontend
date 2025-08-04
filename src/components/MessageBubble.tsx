@@ -103,7 +103,7 @@ export default function MessageBubble({
       default:
         return (
           <Typography variant="body1">
-            {message.text}
+            {message.text || 'Empty message'}
           </Typography>
         );
     }
