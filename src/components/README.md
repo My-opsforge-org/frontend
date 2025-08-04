@@ -39,6 +39,50 @@ Utility functions and types for chat functionality:
 - Conversation sorting and filtering
 - Mock data generators for development
 
+## Avatar Chat Feature
+
+### Overview
+The avatar chat feature allows users to have conversations with inspiring historical figures and personalities. When a user clicks on an avatar in the Avatars panel, they can start a chat session with that avatar.
+
+### Components
+
+#### AvatarsContent.tsx
+- Main component for displaying the avatar selection panel
+- Shows a grid of available avatars with their images, names, and quotes
+- Clicking an avatar opens a detail dialog with options to:
+  - View avatar information
+  - Start a chat session
+
+#### AvatarChat.tsx
+- Full-screen chat interface for conversations with avatars
+- Features:
+  - Real-time messaging with avatar personalities
+  - Typing indicators
+  - Auto-scroll to latest messages
+  - Responsive design with dark/light theme support
+  - Avatar-specific responses based on their quotes and personalities
+
+### How to Use
+
+1. Navigate to the Avatars tab in the main navigation
+2. Click on any avatar to view their details
+3. Click "Start Chat" to begin a conversation
+4. Type your message and press Enter or click the send button
+5. The avatar will respond with personality-appropriate messages
+6. Click the back arrow or close button to exit the chat
+
+### Technical Details
+
+- Uses Material-UI components for consistent styling
+- Integrates with existing MessageBubble component for message display
+- Supports both dark and light themes
+- Responsive design that works on mobile and desktop
+- Simulates realistic typing delays for better UX
+
+### Avatar Personalities
+
+Each avatar has a unique personality based on their historical quotes and achievements. The chat system generates contextual responses that reflect the avatar's character and wisdom.
+
 ## Features
 
 ### 1. Conversation Management

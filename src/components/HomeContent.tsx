@@ -7,6 +7,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import ShareIcon from '@mui/icons-material/Share';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import FAB from './FAB';
 
@@ -19,7 +20,9 @@ interface Post {
   author?: {
     name?: string;
     avatarUrl?: string;
+    id?: number;
   };
+  author_id?: number;
   images: Array<{ id?: number; url: string }>;
   likes_count?: number;
   is_liked?: boolean;
@@ -44,6 +47,8 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   const [commentsOpen, setCommentsOpen] = useState<{open: boolean, postId: number | null}>({open: false, postId: null});
   const [comments, setComments] = useState<{[key:number]: any[]}>({});
   const [commentsLoading, setCommentsLoading] = useState<{[key:number]: boolean}>({});
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<{[key:number]:boolean}>({});
   const navigate = useNavigate();
 
   // FAB and modal state for profile post
@@ -53,6 +58,27 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
   const [profilePostImages, setProfilePostImages] = useState(''); // comma-separated URLs
   const [profilePostError, setProfilePostError] = useState('');
   const [creatingProfilePost, setCreatingProfilePost] = useState(false);
+
+  // Fetch current user ID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUserId(userData.id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch current user:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -219,6 +245,28 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       setProfilePostError('Network error');
     }
     setCreatingProfilePost(false);
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    setDeleteLoading(l => ({...l, [postId]: true}));
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setPosts(posts => posts.filter(p => p.id !== postId));
+        setSnackbar({open:true, message:'Post deleted successfully', severity:'success'});
+      } else {
+        const data = await response.json();
+        setSnackbar({open:true, message: data.error || 'Failed to delete post', severity:'error'});
+      }
+    } catch (err) {
+      setSnackbar({open:true, message:'Network error while deleting post', severity:'error'});
+    } finally {
+      setDeleteLoading(l => ({...l, [postId]: false}));
+    }
   };
 
   if (isLoading) {
@@ -391,94 +439,189 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
                 </Box>
               )}
             </CardContent>
-            <Box 
-              display="flex" 
-              alignItems="center" 
-              px={3} 
-              pb={2}
-              sx={{
-                borderTop: '1px solid',
-                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                pt: 2,
-              }}
-            >
-              <Tooltip title="Like" arrow>
-                <span>
-                  <IconButton 
-                    onClick={() => handleLike(post.id)} 
-                    disabled={likeLoading[post.id] || post.is_liked} 
-                    sx={{
-                      color: post.is_liked ? '#ef4444' : (isDarkTheme ? '#9ca3af' : '#6b7280'),
-                      '&:hover': {
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        transform: 'scale(1.1)',
-                      },
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    {post.is_liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  mr: 3,
-                  fontWeight: 600,
-                  color: isDarkTheme ? '#e2e8f0' : '#374151',
-                }}
-              >
-                {post.likes_count || 0}
-              </Typography>
-              <Tooltip title="Bookmark" arrow>
-                <span>
-                  <IconButton 
-                    onClick={() => handleBookmark(post.id, !!post.is_bookmarked)} 
-                    disabled={bookmarkLoading[post.id]} 
-                    sx={{
-                      color: post.is_bookmarked ? '#f59e0b' : (isDarkTheme ? '#9ca3af' : '#6b7280'),
-                      '&:hover': {
-                        background: 'rgba(245, 158, 11, 0.1)',
-                        transform: 'scale(1.1)',
-                      },
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    {post.is_bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title="Share" arrow>
-                <IconButton 
-                  onClick={() => handleShare(post.id)}
-                  sx={{
-                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
-                    '&:hover': {
-                      background: 'rgba(99, 102, 241, 0.1)',
-                      transform: 'scale(1.1)',
-                    },
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <ShareIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Comment" arrow>
-                <IconButton 
-                  onClick={() => openCommentsModal(post.id)}
-                  sx={{
-                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
-                    '&:hover': {
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      transform: 'scale(1.1)',
-                    },
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <ChatBubbleOutlineIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
+                         {/* Beautiful Action Buttons Section */}
+             <Box 
+               sx={{
+                 borderTop: '1px solid',
+                 borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+                 background: isDarkTheme 
+                   ? 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)'
+                   : 'linear-gradient(180deg, rgba(0,0,0,0.01) 0%, rgba(0,0,0,0.02) 100%)',
+                 pt: 3,
+                 pb: 2,
+                 px: 3,
+               }}
+             >
+               {/* Main Actions Row */}
+               <Box 
+                 display="flex" 
+                 alignItems="center" 
+                 justifyContent="space-between"
+                 mb={2}
+               >
+                 {/* Left side - Like with enhanced styling */}
+                 <Box 
+                   display="flex" 
+                   alignItems="center" 
+                   gap={1.5}
+                   sx={{
+                     background: isDarkTheme 
+                       ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.05) 100%)'
+                       : 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.03) 100%)',
+                     borderRadius: 3,
+                     px: 2,
+                     py: 1,
+                     border: '1px solid',
+                     borderColor: post.is_liked 
+                       ? 'rgba(239,68,68,0.3)' 
+                       : (isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+                   }}
+                 >
+                   <Tooltip title="Like" arrow>
+                     <span>
+                       <IconButton 
+                         onClick={() => handleLike(post.id)} 
+                         disabled={likeLoading[post.id] || post.is_liked} 
+                         size="large"
+                         sx={{
+                           color: post.is_liked ? '#ef4444' : (isDarkTheme ? '#9ca3af' : '#6b7280'),
+                           '&:hover': {
+                             background: 'rgba(239, 68, 68, 0.15)',
+                             transform: 'scale(1.1)',
+                           },
+                           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                           borderRadius: 2,
+                           width: 44,
+                           height: 44,
+                         }}
+                       >
+                         {post.is_liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                       </IconButton>
+                     </span>
+                   </Tooltip>
+                   <Typography 
+                     variant="h6" 
+                     sx={{ 
+                       fontWeight: 700,
+                       color: post.is_liked ? '#ef4444' : (isDarkTheme ? '#e2e8f0' : '#374151'),
+                       minWidth: '24px',
+                       textAlign: 'center',
+                     }}
+                   >
+                     {post.likes_count || 0}
+                   </Typography>
+                 </Box>
+
+                 {/* Right side - Action buttons with beautiful grouping */}
+                 <Box 
+                   display="flex" 
+                   alignItems="center" 
+                   gap={1}
+                   sx={{
+                     background: isDarkTheme 
+                       ? 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)'
+                       : 'linear-gradient(135deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.01) 100%)',
+                     borderRadius: 3,
+                     px: 2,
+                     py: 1,
+                     border: '1px solid',
+                     borderColor: isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                   }}
+                 >
+                   {/* Bookmark */}
+                   <Tooltip title="Bookmark" arrow>
+                     <span>
+                       <IconButton 
+                         onClick={() => handleBookmark(post.id, !!post.is_bookmarked)} 
+                         disabled={bookmarkLoading[post.id]} 
+                         size="large"
+                         sx={{
+                           color: post.is_bookmarked ? '#f59e0b' : (isDarkTheme ? '#9ca3af' : '#6b7280'),
+                           '&:hover': {
+                             background: 'rgba(245, 158, 11, 0.15)',
+                             transform: 'scale(1.1)',
+                           },
+                           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                           borderRadius: 2,
+                           width: 44,
+                           height: 44,
+                         }}
+                       >
+                         {post.is_bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                       </IconButton>
+                     </span>
+                   </Tooltip>
+                   
+                   {/* Comment */}
+                   <Tooltip title="Comment" arrow>
+                     <IconButton 
+                       onClick={() => openCommentsModal(post.id)}
+                       size="large"
+                       sx={{
+                         color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                         '&:hover': {
+                           background: 'rgba(16, 185, 129, 0.15)',
+                           transform: 'scale(1.1)',
+                         },
+                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                         borderRadius: 2,
+                         width: 44,
+                         height: 44,
+                       }}
+                     >
+                       <ChatBubbleOutlineIcon />
+                     </IconButton>
+                   </Tooltip>
+                   
+                   {/* Share */}
+                   <Tooltip title="Share" arrow>
+                     <IconButton 
+                       onClick={() => handleShare(post.id)}
+                       size="large"
+                       sx={{
+                         color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                         '&:hover': {
+                           background: 'rgba(99, 102, 241, 0.15)',
+                           transform: 'scale(1.1)',
+                         },
+                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                         borderRadius: 2,
+                         width: 44,
+                         height: 44,
+                       }}
+                     >
+                       <ShareIcon />
+                     </IconButton>
+                   </Tooltip>
+                   
+                   {/* Delete - only for author */}
+                   {currentUserId === post.author_id && (
+                     <Tooltip title="Delete Post" arrow>
+                       <span>
+                         <IconButton 
+                           onClick={() => handleDeletePost(post.id)} 
+                           disabled={deleteLoading[post.id]} 
+                           size="large"
+                           sx={{
+                             color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                             '&:hover': {
+                               background: 'rgba(239, 68, 68, 0.15)',
+                               transform: 'scale(1.1)',
+                             },
+                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                             borderRadius: 2,
+                             width: 44,
+                             height: 44,
+                           }}
+                         >
+                           <DeleteIcon />
+                         </IconButton>
+                       </span>
+                     </Tooltip>
+                   )}
+                 </Box>
+               </Box>
+             </Box>
             <Box px={3} pb={3}>
               <TextField
                 size="small"

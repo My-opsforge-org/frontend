@@ -1,7 +1,6 @@
-import { Avatar, Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, CardHeader, Typography, IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
 import { useThemeToggle } from '../App';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import IconButton from '@mui/material/IconButton';
 import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import Button from '@mui/material/Button';
@@ -12,6 +11,7 @@ import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
 import Chip from '@mui/material/Chip';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { API_BASE_URL } from '../api';
 
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -42,6 +42,30 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
   const [bookmarks, setBookmarks] = React.useState<any[]>([]);
   const [bookmarksLoading, setBookmarksLoading] = React.useState(false);
   const [bookmarksError, setBookmarksError] = React.useState('');
+  const [deleteLoading, setDeleteLoading] = React.useState<{[key:number]:boolean}>({});
+  const [snackbar, setSnackbar] = React.useState<{open:boolean, message:string, severity:'success'|'error'}>({open:false, message:'', severity:'success'});
+
+  const handleDeletePost = async (postId: number) => {
+    setDeleteLoading(l => ({...l, [postId]: true}));
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setUserPosts(posts => posts.filter(p => p.id !== postId));
+        setSnackbar({open:true, message:'Post deleted successfully', severity:'success'});
+      } else {
+        const data = await response.json();
+        setSnackbar({open:true, message: data.error || 'Failed to delete post', severity:'error'});
+      }
+    } catch (err) {
+      setSnackbar({open:true, message:'Network error while deleting post', severity:'error'});
+    } finally {
+      setDeleteLoading(l => ({...l, [postId]: false}));
+    }
+  };
 
   React.useEffect(() => {
     const fetchProfileAndFollows = async () => {
@@ -290,6 +314,28 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
                       avatar={<Avatar src={profileData.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}`} alt={profileData.name || 'User'} />}
                       title={profileData.name || 'User'}
                       subheader={new Date(post.created_at).toLocaleDateString()}
+                      action={
+                        isOwnProfile && (
+                          <Tooltip title="Delete Post" arrow>
+                            <span>
+                              <IconButton 
+                                onClick={() => handleDeletePost(post.id)} 
+                                disabled={deleteLoading[post.id]} 
+                                sx={{
+                                  color: isDark ? '#9ca3af' : '#6b7280',
+                                  '&:hover': {
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    transform: 'scale(1.1)',
+                                  },
+                                  transition: 'all 0.2s ease',
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )
+                      }
                     />
                     <CardContent>
                       {post.community && (
@@ -379,6 +425,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
               <Box component="form" sx={{ width: '100%' }}>
                 <TextField label="Name" value={editProfile.name || ''} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} fullWidth margin="dense" />
                 <TextField label="Email" value={editProfile.email || ''} onChange={e => setEditProfile({ ...editProfile, email: e.target.value })} fullWidth margin="dense" />
+                <TextField label="Avatar URL" value={editProfile.avatarUrl || ''} onChange={e => setEditProfile({ ...editProfile, avatarUrl: e.target.value })} fullWidth margin="dense" placeholder="Enter image URL for your profile picture" />
                 <TextField label="Bio" value={editProfile.bio || ''} onChange={e => setEditProfile({ ...editProfile, bio: e.target.value })} fullWidth margin="dense" multiline minRows={2} />
                 <TextField label="Age" type="number" value={editProfile.age || ''} onChange={e => setEditProfile({ ...editProfile, age: e.target.value })} fullWidth margin="dense" />
                 <TextField label="Gender" value={editProfile.gender || ''} onChange={e => setEditProfile({ ...editProfile, gender: e.target.value })} fullWidth margin="dense" />
@@ -423,6 +470,11 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
           </DialogActions>
         </Dialog>
       )}
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({...s, open:false}))}>
+        <Alert onClose={() => setSnackbar(s => ({...s, open:false}))} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 } 

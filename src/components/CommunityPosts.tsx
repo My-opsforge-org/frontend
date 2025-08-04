@@ -1,11 +1,13 @@
-import { Box, Typography, Card, CardContent, Button, TextField, CircularProgress, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, Card, CardContent, Button, TextField, CircularProgress, IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
 import React from 'react';
 import FAB from './FAB';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import { API_BASE_URL } from '../api';
 
 interface Community {
   id: number;
@@ -56,6 +58,55 @@ const CommunityPosts: React.FC<CommunityPostsProps> = ({
   setPostImages
 }) => {
   const [openPostModal, setOpenPostModal] = React.useState(false);
+  const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
+  const [deleteLoading, setDeleteLoading] = React.useState<{[key:number]:boolean}>({});
+  const [snackbar, setSnackbar] = React.useState<{open:boolean, message:string, severity:'success'|'error'}>({open:false, message:'', severity:'success'});
+
+  // Fetch current user ID
+  React.useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUserId(userData.id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch current user:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
+  const handleDeletePost = async (postId: number) => {
+    setDeleteLoading(l => ({...l, [postId]: true}));
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        // Note: We can't directly update posts here since it's passed as a prop
+        // The parent component should handle the state update
+        setSnackbar({open:true, message:'Post deleted successfully', severity:'success'});
+        // Reload the page or trigger a refresh
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        setSnackbar({open:true, message: data.error || 'Failed to delete post', severity:'error'});
+      }
+    } catch (err) {
+      setSnackbar({open:true, message:'Network error while deleting post', severity:'error'});
+    } finally {
+      setDeleteLoading(l => ({...l, [postId]: false}));
+    }
+  };
 
   return (
     <Box mt={2}>
@@ -122,21 +173,50 @@ const CommunityPosts: React.FC<CommunityPostsProps> = ({
         posts.map(post => (
           <Card key={post.id} sx={{ mb: 2 }}>
             <CardContent>
-              <Typography variant="h6">{post.title}</Typography>
-              {/* Show images if present */}
-              {post.images && post.images.length > 0 && (
-                <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
-                  {post.images.map((img, idx) => (
-                    <Box key={idx} component="img" src={img.url} alt="post image" sx={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 2, boxShadow: 1 }} />
-                  ))}
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box flex={1}>
+                  <Typography variant="h6">{post.title}</Typography>
+                  {/* Show images if present */}
+                  {post.images && post.images.length > 0 && (
+                    <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
+                      {post.images.map((img, idx) => (
+                        <Box key={idx} component="img" src={img.url} alt="post image" sx={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 2, boxShadow: 1 }} />
+                      ))}
+                    </Box>
+                  )}
+                  <Typography variant="body2" color="textSecondary">{post.content}</Typography>
+                  <Typography variant="caption" color="textSecondary">By User {post.author_id} on {new Date(post.created_at).toLocaleString()}</Typography>
                 </Box>
-              )}
-              <Typography variant="body2" color="textSecondary">{post.content}</Typography>
-              <Typography variant="caption" color="textSecondary">By User {post.author_id} on {new Date(post.created_at).toLocaleString()}</Typography>
+                {currentUserId === post.author_id && (
+                  <Tooltip title="Delete Post" arrow>
+                    <span>
+                      <IconButton 
+                        onClick={() => handleDeletePost(post.id)} 
+                        disabled={deleteLoading[post.id]} 
+                        sx={{
+                          color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                          '&:hover': {
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            transform: 'scale(1.1)',
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </Box>
             </CardContent>
           </Card>
         ))
       )}
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({...s, open:false}))}>
+        <Alert onClose={() => setSnackbar(s => ({...s, open:false}))} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

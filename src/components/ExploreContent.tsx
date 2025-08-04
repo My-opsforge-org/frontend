@@ -244,15 +244,13 @@ export default function ExploreContent({ isDarkTheme }: { isDarkTheme: boolean }
                 rel="noopener noreferrer"
               >
                 <Avatar
-                  src={place.photos && place.photos[0]?.photo_reference ?
-                    `https://maps.googleapis.com/maps/api/place/photo?maxwidth=80&photoreference=${place.photos[0].photo_reference}&key=YOUR_GOOGLE_PLACES_API_KEY` // <-- Replace with your actual Google Places API key
-                    : undefined}
+                  src="https://fastly.picsum.photos/id/88/1920/1080.jpg?hmac=sgVEfGP8uWZ5wpQxnpPWXZ88momJpr_EQuYcTGKrdTs"
                   alt={place.name}
                   sx={{ width: 48, height: 48, mr: 2, borderRadius: 2, bgcolor: '#eee', objectFit: 'cover' }}
                 >
-                  {(!place.photos || !place.photos[0]?.photo_reference)
-                    ? <PlaceOutlinedIcon sx={{ color: '#888', fontSize: 28 }} />
-                    : null}
+                  {place.name && place.name.length > 0
+                    ? place.name.charAt(0).toUpperCase()
+                    : <PlaceOutlinedIcon sx={{ color: '#888', fontSize: 28 }} />}
                 </Avatar>
                 <ListItemText
                   primary={place.name}

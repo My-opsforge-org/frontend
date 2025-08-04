@@ -488,6 +488,15 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
                     sx={{ mb: 2 }}
                   />
                   <TextField 
+                    label="Avatar URL" 
+                    value={editProfile.avatarUrl || ''} 
+                    onChange={e => setEditProfile({ ...editProfile, avatarUrl: e.target.value })} 
+                    fullWidth 
+                    margin="dense" 
+                    placeholder="Enter image URL for your profile picture"
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField 
                     label="Bio" 
                     value={editProfile.bio || ''} 
                     onChange={e => setEditProfile({ ...editProfile, bio: e.target.value })} 
