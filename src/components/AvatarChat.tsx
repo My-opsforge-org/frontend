@@ -22,6 +22,7 @@ import {
   SmartToy as BotIcon
 } from '@mui/icons-material';
 import { AvatarItem } from '../services/avatarService';
+import { AvatarChatService } from '../services/avatarChatService';
 import MessageBubble from './MessageBubble';
 import { Message } from './ChatUtils';
 
@@ -36,6 +37,8 @@ export default function AvatarChat({ avatar, isDarkTheme, onClose }: AvatarChatP
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -70,17 +73,34 @@ export default function AvatarChat({ avatar, isDarkTheme, onClose }: AvatarChatP
   };
 
   const generateAvatarResponse = async (userMessage: string): Promise<string> => {
-    // Simulate AI response based on avatar personality
-    const responses = [
-      `That's an interesting point! As ${avatar.name}, I believe that ${userMessage.toLowerCase().includes('success') ? 'success comes from persistence and learning from failures.' : 'every challenge is an opportunity for growth.'}`,
-      `I appreciate you sharing that with me. ${avatar.quote} What do you think about this perspective?`,
-      `That reminds me of a time when I faced similar challenges. ${avatar.name} would say that ${userMessage.toLowerCase().includes('problem') ? 'problems are just solutions waiting to be discovered.' : 'every experience teaches us something valuable.'}`,
-      `I love how you think! ${avatar.quote} How can we apply this thinking to your current situation?`,
-      `That's a great question! As ${avatar.name}, I've learned that ${userMessage.toLowerCase().includes('future') ? 'the future belongs to those who believe in the beauty of their dreams.' : 'the best way to predict the future is to create it.'}`
-    ];
-    
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    return await simulateTyping(randomResponse);
+    try {
+      setError(null);
+      
+      // Call the real API
+      const response = await AvatarChatService.sendMessageToCharacter(
+        avatar.name,
+        userMessage,
+        conversationHistory
+      );
+
+      if (response.success && response.data) {
+        // Update conversation history
+        const newHistory = [
+          ...conversationHistory,
+          { role: 'user' as const, content: userMessage },
+          { role: 'assistant' as const, content: response.data.characterResponse }
+        ];
+        setConversationHistory(newHistory);
+        
+        return response.data.characterResponse;
+      } else {
+        throw new Error('Failed to get character response');
+      }
+    } catch (error) {
+      console.error('Error generating avatar response:', error);
+      setError('Failed to get response from character. Please try again.');
+      throw error;
+    }
   };
 
   const handleSendMessage = async () => {
@@ -114,6 +134,7 @@ export default function AvatarChat({ avatar, isDarkTheme, onClose }: AvatarChatP
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error generating response:', error);
+      // Don't add error message to chat, just show it in UI
     } finally {
       setIsLoading(false);
     }
@@ -313,10 +334,33 @@ export default function AvatarChat({ avatar, isDarkTheme, onClose }: AvatarChatP
                           fontSize: '0.875rem',
                         }}
                       >
-                        {avatar.name} is typing...
+                        {avatar.name} is thinking...
                       </Typography>
                     </Box>
                   </Box>
+                </Box>
+              </Zoom>
+            )}
+            
+            {error && (
+              <Zoom in={true}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    mb: 2,
+                  }}
+                >
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      maxWidth: '80%',
+                      background: isDarkTheme ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.05)',
+                      border: isDarkTheme ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(239, 68, 68, 0.15)',
+                    }}
+                  >
+                    {error}
+                  </Alert>
                 </Box>
               </Zoom>
             )}
