@@ -607,127 +607,418 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
 
   if (selectedUser) {
     return (
-      <Box sx={{ 
-        height: 'calc(100vh - 136px)', 
-        display: 'flex', 
-        flexDirection: 'column',
-        position: 'relative',
-        pb: 12 // Increased bottom padding to account for bottom navigation
-      }}>
-        {/* Chat Header */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 2,
-            bgcolor: isDarkTheme ? '#2C2C2E' : '#fff',
-            flexShrink: 0
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff',
+          color: isDarkTheme ? '#ffffff' : '#000000',
+          zIndex: 1300,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          width: '100vw'
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            borderBottom: isDarkTheme 
+              ? '1px solid rgba(255, 255, 255, 0.08)' 
+              : '1px solid rgba(0, 0, 0, 0.08)',
+            p: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff',
+            backdropFilter: 'blur(10px)',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: isDarkTheme
+                ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, transparent 100%)'
+                : 'linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, transparent 100%)',
+              pointerEvents: 'none',
+            }
           }}
         >
-          <IconButton onClick={() => setSelectedUser(null)}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Avatar src={selectedUser.avatar}>
-            {selectedUser.name && selectedUser.name.length > 0
-              ? selectedUser.name.charAt(0).toUpperCase()
-              : 'U'}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" color={isDarkTheme ? 'white' : 'black'}>
-              {selectedUser.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {selectedUser.isOnline ? 'Online' : 'Offline'}
-            </Typography>
-          </Box>
-          <IconButton>
-            <CallIcon />
-          </IconButton>
-          <IconButton>
-            <VideoIcon />
-          </IconButton>
-          <IconButton onClick={handleMenuOpen}>
-            <MoreHorizIcon />
-          </IconButton>
-        </Paper>
-
-        {/* Messages */}
-        <Box sx={{ 
-          flex: 1, 
-          overflow: 'auto', 
-          p: 2, 
-          bgcolor: isDarkTheme ? '#1C1C1E' : '#F8F9FA',
-          minHeight: 0
-        }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              <Typography>Loading messages...</Typography>
-            </Box>
-          ) : (
-            messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isOwnMessage={message.sender === 'me'}
-                isDarkTheme={isDarkTheme}
-                onDownload={handleDownload}
-              />
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </Box>
-
-        {/* Message Input */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: isDarkTheme ? '#2C2C2E' : '#fff',
-            flexShrink: 0
-          }}
-        >
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-            <IconButton>
-              <AttachFileIcon />
-            </IconButton>
-            <TextField
-              fullWidth
-              multiline
-              maxRows={4}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              variant="outlined"
-              size="small"
+          <Box display="flex" alignItems="center" gap={2.5}>
+            <IconButton
+              onClick={() => setSelectedUser(null)}
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: isDarkTheme ? '#1C1C1E' : '#fff'
-                }
-              }}
-            />
-            <IconButton>
-              <EmojiIcon />
-            </IconButton>
-            <IconButton 
-              onClick={() => {
-                handleSendMessage();
-              }}
-              disabled={!newMessage.trim() || loading}
-              sx={{ 
-                bgcolor: newMessage.trim() ? '#007AFF' : 'transparent',
-                color: newMessage.trim() ? 'white' : 'text.secondary',
+                color: isDarkTheme ? '#d1d5db' : '#374151',
+                bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderRadius: 2,
                 '&:hover': {
-                  bgcolor: newMessage.trim() ? '#0056CC' : 'transparent'
-                }
+                  bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
               }}
             >
-              <SendIcon />
+              <ArrowBackIcon />
+            </IconButton>
+            <Avatar
+              src={selectedUser.avatar}
+              sx={{
+                width: 48,
+                height: 48,
+                border: isDarkTheme ? '2px solid rgba(255, 255, 255, 0.1)' : '2px solid rgba(99, 102, 241, 0.1)',
+                boxShadow: isDarkTheme 
+                  ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
+                  : '0 4px 12px rgba(99, 102, 241, 0.15)',
+              }}
+            >
+              {selectedUser.name && selectedUser.name.length > 0
+                ? selectedUser.name.charAt(0).toUpperCase()
+                : 'U'}
+            </Avatar>
+            <Box>
+              <Typography 
+                variant="h6" 
+                component="div"
+                sx={{
+                  fontWeight: 600,
+                  color: isDarkTheme ? '#ffffff' : '#1f2937',
+                  mb: 0.5
+                }}
+              >
+                {selectedUser.name}
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: selectedUser.isOnline ? '#10b981' : '#6b7280',
+                    boxShadow: selectedUser.isOnline 
+                      ? '0 0 8px rgba(16, 185, 129, 0.4)' 
+                      : 'none'
+                  }}
+                />
+                <Typography 
+                  variant="body2" 
+                  sx={{
+                    color: selectedUser.isOnline 
+                      ? (isDarkTheme ? '#10b981' : '#059669') 
+                      : (isDarkTheme ? '#9ca3af' : '#6b7280'),
+                    fontWeight: 500,
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {selectedUser.isOnline ? 'Online' : 'Offline'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+          <Box display="flex" gap={1}>
+            <IconButton
+              sx={{
+                color: isDarkTheme ? '#d1d5db' : '#374151',
+                bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderRadius: 2,
+                '&:hover': {
+                  bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <CallIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                color: isDarkTheme ? '#d1d5db' : '#374151',
+                bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderRadius: 2,
+                '&:hover': {
+                  bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <VideoIcon />
+            </IconButton>
+            <IconButton
+              onClick={handleMenuOpen}
+              sx={{
+                color: isDarkTheme ? '#d1d5db' : '#374151',
+                bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderRadius: 2,
+                '&:hover': {
+                  bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <MoreHorizIcon />
             </IconButton>
           </Box>
-        </Paper>
+        </Box>
+
+        {/* Content Area */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Messages Area */}
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: 'auto',
+              p: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              background: isDarkTheme
+                ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.3) 0%, rgba(15, 15, 35, 0.2) 100%)'
+                : 'linear-gradient(135deg, rgba(248, 250, 252, 0.5) 0%, rgba(241, 245, 249, 0.3) 100%)',
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: isDarkTheme
+                  ? 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%)'
+                  : 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.02) 0%, transparent 50%)',
+                pointerEvents: 'none',
+              }
+            }}
+          >
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              messages.map((message) => (
+                <Box
+                  key={message.id}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: message.sender === 'me' ? 'flex-end' : 'flex-start',
+                    mb: 1
+                  }}
+                >
+                                     <Box
+                     sx={{
+                       maxWidth: '75%',
+                       display: 'flex',
+                       flexDirection: message.sender === 'me' ? 'row-reverse' : 'row',
+                       alignItems: 'flex-end',
+                       gap: 1
+                     }}
+                   >
+                     {message.sender !== 'me' && (
+                       <Avatar
+                         src={selectedUser.avatar}
+                         sx={{ width: 32, height: 32 }}
+                       >
+                         {selectedUser.name && selectedUser.name.length > 0
+                           ? selectedUser.name.charAt(0).toUpperCase()
+                           : 'U'}
+                       </Avatar>
+                     )}
+                     <Paper
+                       sx={{
+                         p: 2,
+                         bgcolor: message.sender === 'me' 
+                           ? (isDarkTheme ? '#6366f1' : '#3b82f6')
+                           : (isDarkTheme ? '#374151' : '#f3f4f6'),
+                         color: message.sender === 'me' ? '#ffffff' : (isDarkTheme ? '#ffffff' : '#1f2937'),
+                         borderRadius: 3,
+                         maxWidth: '100%',
+                         minWidth: '120px',
+                         wordBreak: 'break-word',
+                         boxShadow: message.sender === 'me'
+                           ? (isDarkTheme ? '0 4px 12px rgba(99, 102, 241, 0.3)' : '0 4px 12px rgba(59, 130, 246, 0.2)')
+                           : (isDarkTheme ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 4px 12px rgba(0, 0, 0, 0.08)'),
+                         border: message.sender === 'me'
+                           ? '1px solid rgba(255, 255, 255, 0.1)'
+                           : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)'),
+                         transition: 'all 0.2s ease',
+                         '&:hover': {
+                           transform: 'translateY(-1px)',
+                           boxShadow: message.sender === 'me'
+                             ? (isDarkTheme ? '0 6px 16px rgba(99, 102, 241, 0.4)' : '0 6px 16px rgba(59, 130, 246, 0.3)')
+                             : (isDarkTheme ? '0 6px 16px rgba(0, 0, 0, 0.3)' : '0 6px 16px rgba(0, 0, 0, 0.12)'),
+                         }
+                       }}
+                     >
+                      {message.sender !== 'me' && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            mb: 0.5,
+                            fontWeight: 600,
+                            color: message.sender === 'me' ? 'rgba(255, 255, 255, 0.8)' : (isDarkTheme ? '#9ca3af' : '#6b7280')
+                          }}
+                        >
+                          {selectedUser.name}
+                        </Typography>
+                      )}
+                      <Typography variant="body2">
+                        {message.text}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          mt: 0.5,
+                          color: message.sender === 'me' ? 'rgba(255, 255, 255, 0.7)' : (isDarkTheme ? '#6b7280' : '#9ca3af'),
+                          textAlign: message.sender === 'me' ? 'right' : 'left'
+                        }}
+                      >
+                        {formatTime(message.timestamp)}
+                      </Typography>
+                    </Paper>
+                  </Box>
+                </Box>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </Box>
+
+          {/* Input Area */}
+          <Box
+                          sx={{
+                p: 3,
+                pb: 12, // Increased bottom padding to account for bottom navigation
+                borderTop: isDarkTheme 
+                  ? '1px solid rgba(255, 255, 255, 0.08)' 
+                  : '1px solid rgba(0, 0, 0, 0.08)',
+                bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff',
+                backdropFilter: 'blur(10px)',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: isDarkTheme
+                    ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, transparent 100%)'
+                    : 'linear-gradient(135deg, rgba(99, 102, 241, 0.01) 0%, transparent 100%)',
+                  pointerEvents: 'none',
+                }
+              }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <TextField
+                fullWidth
+                multiline
+                maxRows={4}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="Attach file">
+                          <IconButton 
+                            size="small"
+                            sx={{
+                              color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                              bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                              borderRadius: 1.5,
+                              '&:hover': {
+                                bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                                transform: 'scale(1.05)',
+                              },
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            <AttachFileIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Add emoji">
+                          <IconButton 
+                            size="small"
+                            sx={{
+                              color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                              bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                              borderRadius: 1.5,
+                              '&:hover': {
+                                bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                                transform: 'scale(1.05)',
+                              },
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            <EmojiIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Send message">
+                          <IconButton
+                            size="small"
+                            onClick={handleSendMessage}
+                            disabled={!newMessage.trim() || loading}
+                            sx={{
+                              color: newMessage.trim() ? '#ffffff' : (isDarkTheme ? '#6b7280' : '#9ca3af'),
+                              bgcolor: newMessage.trim() 
+                                ? (isDarkTheme ? '#6366f1' : '#3b82f6') 
+                                : (isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'),
+                              borderRadius: 1.5,
+                              '&:hover': {
+                                bgcolor: newMessage.trim() 
+                                  ? (isDarkTheme ? '#5b21b6' : '#2563eb') 
+                                  : (isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'),
+                                transform: 'scale(1.05)',
+                              },
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            <SendIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </InputAdornment>
+                  )
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: isDarkTheme ? '#374151' : '#f9fafb',
+                    borderRadius: 3,
+                    '& fieldset': {
+                      borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      borderRadius: 3,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: isDarkTheme ? '#6366f1' : '#3b82f6',
+                      borderWidth: '2px',
+                    }
+                  },
+                  '& .MuiInputBase-input': {
+                    color: isDarkTheme ? '#ffffff' : '#1f2937',
+                    '&::placeholder': {
+                      color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                      opacity: 1,
+                    }
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
 
         {/* Chat Options Menu */}
         <Menu

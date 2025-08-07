@@ -1,6 +1,7 @@
 import { Box, Typography, Card, CardContent, Button, TextField, CircularProgress, IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PeopleIcon from '@mui/icons-material/People';
 import React from 'react';
 import FAB from './FAB';
 import Dialog from '@mui/material/Dialog';
@@ -8,6 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import { API_BASE_URL } from '../api';
+import CommunityMembersModal from './CommunityMembersModal';
 
 interface Community {
   id: number;
@@ -58,6 +60,7 @@ const CommunityPosts: React.FC<CommunityPostsProps> = ({
   setPostImages
 }) => {
   const [openPostModal, setOpenPostModal] = React.useState(false);
+  const [openMembersModal, setOpenMembersModal] = React.useState(false);
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState<{[key:number]:boolean}>({});
   const [snackbar, setSnackbar] = React.useState<{open:boolean, message:string, severity:'success'|'error'}>({open:false, message:'', severity:'success'});
@@ -110,15 +113,35 @@ const CommunityPosts: React.FC<CommunityPostsProps> = ({
 
   return (
     <Box mt={2}>
-      <Box display="flex" alignItems="center" mb={2}>
-        <Tooltip title="Back to Communities">
-          <IconButton onClick={onBack} sx={{ mr: 1, bgcolor: isDarkTheme ? '#23272f' : '#f5f5f5', boxShadow: 1, '&:hover': { bgcolor: isDarkTheme ? '#1a1a1a' : '#e0e0e0' } }}>
-            <ArrowBackIcon sx={{ color: isDarkTheme ? 'white' : 'black' }} />
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+        <Box display="flex" alignItems="center">
+          <Tooltip title="Back to Communities">
+            <IconButton onClick={onBack} sx={{ mr: 1, bgcolor: isDarkTheme ? '#23272f' : '#f5f5f5', boxShadow: 1, '&:hover': { bgcolor: isDarkTheme ? '#1a1a1a' : '#e0e0e0' } }}>
+              <ArrowBackIcon sx={{ color: isDarkTheme ? 'white' : 'black' }} />
+            </IconButton>
+          </Tooltip>
+          <Typography variant="h5" color={isDarkTheme ? 'white' : 'black'} gutterBottom sx={{ fontWeight: 600 }}>
+            Posts in {selectedCommunity.name}
+          </Typography>
+        </Box>
+        <Tooltip title="View Members">
+          <IconButton 
+            onClick={() => setOpenMembersModal(true)}
+            sx={{ 
+              bgcolor: isDarkTheme ? '#374151' : '#f3f4f6', 
+              color: isDarkTheme ? '#d1d5db' : '#374151',
+              boxShadow: 1, 
+              mr: 1, // Add right margin
+              '&:hover': { 
+                bgcolor: isDarkTheme ? '#4b5563' : '#e5e7eb',
+                transform: 'scale(1.05)'
+              },
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <PeopleIcon />
           </IconButton>
         </Tooltip>
-        <Typography variant="h5" color={isDarkTheme ? 'white' : 'black'} gutterBottom sx={{ fontWeight: 600 }}>
-          Posts in {selectedCommunity.name}
-        </Typography>
       </Box>
       {selectedCommunity.is_member && (
         <>
@@ -217,6 +240,15 @@ const CommunityPosts: React.FC<CommunityPostsProps> = ({
           {snackbar.message}
         </Alert>
       </Snackbar>
+      
+      {/* Community Members Modal */}
+      <CommunityMembersModal
+        open={openMembersModal}
+        onClose={() => setOpenMembersModal(false)}
+        communityId={selectedCommunity.id}
+        communityName={selectedCommunity.name}
+        isDarkTheme={isDarkTheme}
+      />
     </Box>
   );
 };

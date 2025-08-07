@@ -9,6 +9,7 @@ import DialogActions from '@mui/material/DialogActions';
 import { useNavigate } from 'react-router-dom';
 import CommunityList from './CommunityList';
 import CommunityPosts from './CommunityPosts';
+import CommunityMembersModal from './CommunityMembersModal';
 
 interface Community {
   id: number;
@@ -41,6 +42,8 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
   const [postImages, setPostImages] = useState(''); // comma-separated URLs
   const [actionLoading, setActionLoading] = useState<number | null>(null); // community id for which join/leave is loading
   const [fabOpen, setFabOpen] = useState(false);
+  const [openMembersModal, setOpenMembersModal] = useState(false);
+  const [selectedCommunityForMembers, setSelectedCommunityForMembers] = useState<Community | null>(null);
   const [newCommunityName, setNewCommunityName] = useState('');
   const [newCommunityDesc, setNewCommunityDesc] = useState('');
   const [creatingCommunity, setCreatingCommunity] = useState(false);
@@ -154,6 +157,12 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
   const handleSelectCommunity = async (community: Community) => {
     setSelectedCommunity(community);
     fetchPosts(community);
+  };
+
+  // Handle view members
+  const handleViewMembers = (community: Community) => {
+    setSelectedCommunityForMembers(community);
+    setOpenMembersModal(true);
   };
 
   // Handle create post
@@ -300,6 +309,7 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
                   actionLoading={actionLoading}
                   handleJoinLeave={handleJoinLeave}
                   handleSelectCommunity={handleSelectCommunity}
+                  handleViewMembers={handleViewMembers}
                   selectedCommunity={selectedCommunity}
                   isDarkTheme={isDarkTheme}
                 />
@@ -329,6 +339,21 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
       {!selectedCommunity && (
         <FAB isDarkTheme={isDarkTheme} onClick={() => setFabOpen(true)} />
       )}
+      
+      {/* Community Members Modal */}
+      {selectedCommunityForMembers && (
+        <CommunityMembersModal
+          open={openMembersModal}
+          onClose={() => {
+            setOpenMembersModal(false);
+            setSelectedCommunityForMembers(null);
+          }}
+          communityId={selectedCommunityForMembers.id}
+          communityName={selectedCommunityForMembers.name}
+          isDarkTheme={isDarkTheme}
+        />
+      )}
+      
       <Dialog open={fabOpen} onClose={() => setFabOpen(false)}>
         <DialogTitle>Create Community</DialogTitle>
         <form onSubmit={handleCreateCommunity}>

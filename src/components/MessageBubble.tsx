@@ -153,99 +153,62 @@ export default function MessageBubble({
       sx={{
         display: 'flex',
         justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
-        mb: 2,
-        position: 'relative',
-        wordBreak: 'break-word',
-        animation: 'fadeIn 0.3s ease-in-out',
+        mb: 1
       }}
     >
-      <Paper
+      <Box
         sx={{
-          p: 2.5,
-          maxWidth: '70%',
-          minWidth: 120,
-          background: isOwnMessage 
-            ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
-            : (isDarkTheme 
-                ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-                : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'),
-          color: isOwnMessage ? 'white' : (isDarkTheme ? 'white' : '#1f2937'),
-          position: 'relative',
-          borderRadius: 3,
-          boxShadow: isOwnMessage
-            ? '0 4px 16px rgba(99, 102, 241, 0.3)'
-            : (isDarkTheme 
-                ? '0 4px 16px rgba(0, 0, 0, 0.3)' 
-                : '0 4px 16px rgba(0, 0, 0, 0.08)'),
-          border: isOwnMessage
-            ? '1px solid rgba(255, 255, 255, 0.2)'
-            : (isDarkTheme 
-                ? '1px solid rgba(255, 255, 255, 0.1)' 
-                : '1px solid rgba(255, 255, 255, 0.8)'),
-          backdropFilter: 'blur(10px)',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: isOwnMessage
-              ? '0 8px 24px rgba(99, 102, 241, 0.4)'
-              : (isDarkTheme 
-                  ? '0 8px 24px rgba(0, 0, 0, 0.4)' 
-                  : '0 8px 24px rgba(0, 0, 0, 0.12)'),
-          },
-          wordWrap: 'break-word',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: isOwnMessage
-              ? 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)'
-              : (isDarkTheme 
-                  ? 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'
-                  : 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'),
-            borderRadius: 3,
-            pointerEvents: 'none',
-          }
+          maxWidth: '75%',
+          display: 'flex',
+          flexDirection: isOwnMessage ? 'row-reverse' : 'row',
+          alignItems: 'flex-end',
+          gap: 1
         }}
       >
-        {/* Message Type Icon */}
-        {getMessageIcon()}
-        
-        {/* Message Content */}
-        {renderMessageContent()}
-        
-        {/* Message Footer */}
-        <Box
+        <Paper
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 0.5,
-            mt: 1.5,
-            pt: 1,
-            borderTop: '1px solid',
-            borderColor: isOwnMessage 
-              ? 'rgba(255, 255, 255, 0.2)' 
-              : (isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'),
+            p: 1.5,
+            bgcolor: isOwnMessage 
+              ? (isDarkTheme ? '#6366f1' : '#3b82f6')
+              : (isDarkTheme ? '#374151' : '#f3f4f6'),
+            color: isOwnMessage ? '#ffffff' : (isDarkTheme ? '#ffffff' : '#1f2937'),
+            borderRadius: 2,
+            maxWidth: '100%',
+            minWidth: '120px',
+            wordBreak: 'break-word'
           }}
         >
-          {showTime && (
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                opacity: 0.7,
-                fontSize: '0.75rem',
-                fontWeight: 500,
-              }}
-            >
-              {formatMessageTime(message.timestamp)}
-            </Typography>
-          )}
-          {getReadStatusIcon()}
-        </Box>
-      </Paper>
+          {/* Message Type Icon */}
+          {getMessageIcon()}
+          
+          {/* Message Content */}
+          {renderMessageContent()}
+          
+          {/* Message Footer */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: 0.5,
+              mt: 0.5
+            }}
+          >
+            {showTime && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : (isDarkTheme ? '#6b7280' : '#9ca3af'),
+                  textAlign: isOwnMessage ? 'right' : 'left'
+                }}
+              >
+                {formatMessageTime(message.timestamp)}
+              </Typography>
+            )}
+            {getReadStatusIcon()}
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 } 

@@ -51,7 +51,7 @@ export class ChatService {
     }
 
     try {
-      this.socket = io('http://localhost:5001', {
+      this.socket = io('http://localhost:5002', {
         auth: {
           token: token
         },
