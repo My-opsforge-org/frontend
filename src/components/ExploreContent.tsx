@@ -818,31 +818,10 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                 }
               }}
             />
-            {(() => {
-              console.log('Progress Bar Debug:', {
-                currentProgress: currentLevel.currentProgress,
-                requiredPlaces: currentLevel.requiredPlaces,
-                percentage: (currentLevel.currentProgress / currentLevel.requiredPlaces) * 100,
-                levelName: currentLevel.name
-              });
-              return null;
-            })()}
+
         </Paper>
 
           {/* Map View */}
-          {(() => {
-            console.log('Map Debug:', { 
-              showMap, 
-              mapCenter, 
-              placesLength: places.length, 
-              questLocation, 
-              questRadius,
-              currentLevel: currentLevel?.name,
-              placesLoading,
-              placesError
-            });
-            return null;
-          })()}
           {showMap && mapCenter && places.length > 0 && (
             <Paper
               sx={{

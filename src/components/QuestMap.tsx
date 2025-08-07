@@ -48,9 +48,7 @@ const QuestMap: React.FC<QuestMapProps> = ({
     const checkGoogleMaps = () => {
       if (window.google && window.google.maps) {
         setIsGoogleMapsLoaded(true);
-        console.log('Google Maps API loaded successfully');
       } else {
-        console.log('Google Maps API not yet loaded, retrying...');
         setTimeout(checkGoogleMaps, 100);
       }
     };

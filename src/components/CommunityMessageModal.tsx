@@ -30,6 +30,7 @@ interface CommunityMessageModalProps {
   communityId: number;
   communityName: string;
   isDarkTheme: boolean;
+  onMessageSent?: () => void;
 }
 
 interface Message {
@@ -46,7 +47,8 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
   onClose,
   communityId,
   communityName,
-  isDarkTheme
+  isDarkTheme,
+  onMessageSent
 }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,11 +70,8 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
       
       // Subscribe to new messages
       const handleNewMessage = (newMessage: CommunityMessage) => {
-        console.log('Handling new community message:', newMessage);
-        
         // Don't add the message if it's from the current user (to avoid duplicates)
         if (newMessage.sender_id === currentUserId) {
-          console.log('Skipping own message to avoid duplicate');
           return;
         }
         
@@ -84,7 +83,6 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
           timestamp: new Date(newMessage.createdAt),
           isOwnMessage: newMessage.sender_id === currentUserId
         };
-        console.log('Formatted message:', formattedMessage);
         setMessages(prev => [...prev, formattedMessage]);
       };
 
@@ -157,6 +155,9 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
           };
           setMessages(prev => [...prev, formattedMessage]);
           setMessage('');
+          
+          // Call the callback to notify parent component
+          onMessageSent?.();
           
           // Scroll to bottom after sending
           setTimeout(() => {

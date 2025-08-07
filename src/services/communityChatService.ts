@@ -57,11 +57,11 @@ export class CommunityChatService {
       });
 
       this.socket.on('connect', () => {
-        console.log('Community chat socket connected');
+        // Socket connected
       });
 
       this.socket.on('disconnect', () => {
-        console.log('Community chat socket disconnected');
+        // Socket disconnected
       });
 
       this.socket.on('connect_error', (error: any) => {
@@ -69,11 +69,8 @@ export class CommunityChatService {
       });
 
       this.socket.on('receive_community_message', (message: CommunityMessage) => {
-        console.log('Received community message via Socket.IO:', message);
-        console.log('Number of registered callbacks:', this.messageCallbacks.length);
         // Notify all registered callbacks
-        this.messageCallbacks.forEach((callback, index) => {
-          console.log(`Calling callback ${index}:`, callback);
+        this.messageCallbacks.forEach((callback) => {
           callback(message);
         });
       });
@@ -95,9 +92,7 @@ export class CommunityChatService {
 
   // Subscribe to community messages
   static subscribeToCommunityMessages(callback: (message: CommunityMessage) => void): void {
-    console.log('Subscribing to community messages, callback:', callback);
     this.messageCallbacks.push(callback);
-    console.log('Total callbacks after subscription:', this.messageCallbacks.length);
   }
 
   // Unsubscribe from community messages
@@ -111,7 +106,6 @@ export class CommunityChatService {
     if (socket) {
       const roomId = `community_${communityId}`;
       socket.emit('join_community_room', communityId);
-      console.log(`Joined community room: ${roomId}`);
     }
   }
 
@@ -121,7 +115,6 @@ export class CommunityChatService {
     if (socket) {
       const roomId = `community_${communityId}`;
       socket.emit('leave_room', roomId);
-      console.log(`Left community room: ${roomId}`);
     }
   }
 
@@ -155,8 +148,6 @@ export class CommunityChatService {
   // Send a message to a community
   static async sendCommunityMessage(communityId: number, content: string): Promise<CommunityChatResponse> {
     try {
-      console.log('Sending community message:', { communityId, content });
-      
       const response = await fetch(`${API_BASE_URL_chat}/community-chat/message`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
@@ -165,9 +156,6 @@ export class CommunityChatService {
           content
         }),
       });
-
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -180,7 +168,6 @@ export class CommunityChatService {
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
       
       return {
         success: true,

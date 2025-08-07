@@ -47,9 +47,7 @@ export default function AvatarsContent({ isDarkTheme, searchQuery = '' }: Avatar
         setLoading(true);
         setError(null);
         const response: AvatarApiResponse = await AvatarService.getAvatars();
-        console.log('API Response:', response); // Debug log
         if (response.success) {
-          console.log('Avatars data:', response.data); // Debug log
           setAvatars(response.data);
           setFilteredAvatars(response.data);
         } else {
@@ -255,7 +253,7 @@ export default function AvatarsContent({ isDarkTheme, searchQuery = '' }: Avatar
           </Box>
         ) : (
           <>
-            {console.log('Rendering avatars:', filteredAvatars)} {/* Debug log */}
+
             <Box
               sx={{
                 display: 'grid',

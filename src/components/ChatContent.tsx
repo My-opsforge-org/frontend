@@ -42,7 +42,8 @@ import {
   Chat as ChatIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
   PersonAdd as PersonAddIcon,
-  PersonRemove as PersonRemoveIcon
+  PersonRemove as PersonRemoveIcon,
+  Groups as GroupsIcon
 } from '@mui/icons-material';
 import { 
   Message, 
@@ -60,6 +61,8 @@ import { ChatService, User } from '../services/chatService';
 import { API_BASE_URL } from '../api';
 import { useNavigate } from 'react-router-dom';
 import Profile from './Profile';
+import CommunityService, { CommunityWithLastMessage } from '../services/communityService';
+import CommunityMessageModal from './CommunityMessageModal';
 
 // Extended User interface to include follow status
 interface ExtendedUser extends User {
@@ -103,6 +106,7 @@ function TabPanel(props: TabPanelProps) {
 export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme: boolean; searchQuery?: string }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [users, setUsers] = useState<ExtendedUser[]>([]);
+  const [communities, setCommunities] = useState<CommunityWithLastMessage[]>([]);
   const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -110,11 +114,14 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
   const [tabValue, setTabValue] = useState(0);
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [communitiesLoading, setCommunitiesLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [followLoading, setFollowLoading] = useState<{[userId: number]: boolean}>({});
   const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({open: false, message: '', severity: 'success'});
   const [currentUserId, setCurrentUserId] = useState<number|null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number|null>(null);
+  const [selectedCommunity, setSelectedCommunity] = useState<CommunityWithLastMessage | null>(null);
+  const [communityMessageModalOpen, setCommunityMessageModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -122,6 +129,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
   useEffect(() => {
     loadConversations();
     loadUsers();
+    loadCommunities();
     loadCurrentUser();
     
     // Check if user came from search field and switch to "All Users" tab
@@ -346,6 +354,28 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
     }
   };
 
+  const loadCommunities = async () => {
+    setCommunitiesLoading(true);
+    try {
+      const communitiesData = await CommunityService.getUserCommunitiesWithLastMessages();
+      setCommunities(communitiesData);
+    } catch (error) {
+      setCommunities([]);
+    } finally {
+      setCommunitiesLoading(false);
+    }
+  };
+
+  const handleCommunitySelect = (community: CommunityWithLastMessage) => {
+    setSelectedCommunity(community);
+    setCommunityMessageModalOpen(true);
+  };
+
+  const handleCommunityMessageSent = () => {
+    // Reload communities to update last message
+    loadCommunities();
+  };
+
   const loadMessages = async (userId: number) => {
     setLoading(true);
     try {
@@ -540,11 +570,28 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
     }
   };
 
-  const filteredConversations = searchConversations(conversations, searchQuery || '');
-  const filteredUsers = users.filter(user => 
-    user.name?.toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-    user.email?.toLowerCase().includes((searchQuery || '').toLowerCase())
-  );
+  // Filter conversations based on search query
+  const filteredConversations = searchQuery
+    ? searchConversations(conversations, searchQuery)
+    : conversations;
+
+  // Filter users based on search query
+  const filteredUsers = searchQuery
+    ? users.filter(user => 
+        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.bio?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : users;
+
+  // Filter communities based on search query
+  const filteredCommunities = searchQuery
+    ? communities.filter(community => 
+        community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        community.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        community.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : communities;
 
   const handleStartChatWithUser = (user: ExtendedUser) => {
     // Create a new conversation for this user
@@ -1135,6 +1182,11 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
             label="All Users" 
             iconPosition="start"
           />
+          <Tab 
+            icon={<GroupsIcon />} 
+            label="Groups" 
+            iconPosition="start"
+          />
         </Tabs>
       </Paper>
 
@@ -1349,6 +1401,111 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           )}
         </Box>
       </TabPanel>
+
+      <TabPanel value={tabValue} index={2}>
+        {/* Groups List */}
+        <Box sx={{ 
+          flex: 1, 
+          overflow: 'auto',
+          pb: 12, // Increased bottom padding to account for bottom navigation
+          bgcolor: isDarkTheme ? '#1C1C1E' : '#F8F9FA'
+        }}>
+          {communitiesLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <Typography>Loading groups...</Typography>
+            </Box>
+          ) : (
+            <List sx={{ bgcolor: 'transparent' }}>
+              {filteredCommunities.map((community) => (
+                <React.Fragment key={community.id}>
+                  <ListItem 
+                    component="div"
+                    onClick={() => {
+                      handleCommunitySelect(community);
+                    }}
+                    sx={{ 
+                      bgcolor: isDarkTheme ? '#1C1C1E' : '#fff',
+                      '&:hover': {
+                        bgcolor: isDarkTheme ? '#2C2C2E' : '#F5F5F5'
+                      },
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar sx={{ bgcolor: '#6366f1' }}>
+                        <GroupsIcon />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography 
+                          variant="subtitle1" 
+                          color={isDarkTheme ? 'white' : 'black'}
+                          sx={{ 
+                            fontWeight: community.unreadCount > 0 ? 'bold' : 'normal'
+                          }}
+                        >
+                          {community.name}
+                        </Typography>
+                      }
+                      secondary={
+                        <Box>
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ 
+                              fontWeight: community.unreadCount > 0 ? 'bold' : 'normal'
+                            }}
+                          >
+                            {community.lastMessage || 'No messages yet'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatTime(new Date(community.lastMessageTime))}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    {community.unreadCount > 0 && (
+                      <Chip
+                        label={community.unreadCount}
+                        size="small"
+                        sx={{ 
+                          bgcolor: '#007AFF', 
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    )}
+                  </ListItem>
+                  <Divider />
+                </React.Fragment>
+              ))}
+              {filteredCommunities.length === 0 && !communitiesLoading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                  <Typography color="text.secondary">
+                    No groups yet. Join communities to see them here!
+                  </Typography>
+                </Box>
+              )}
+            </List>
+          )}
+        </Box>
+      </TabPanel>
+
+      {/* Community Message Modal */}
+      {selectedCommunity && (
+        <CommunityMessageModal
+          open={communityMessageModalOpen}
+          onClose={() => {
+            setCommunityMessageModalOpen(false);
+            setSelectedCommunity(null);
+          }}
+          communityId={selectedCommunity.id}
+          communityName={selectedCommunity.name}
+          isDarkTheme={isDarkTheme}
+          onMessageSent={handleCommunityMessageSent}
+        />
+      )}
 
       {/* Snackbar for follow/unfollow notifications */}
       <Snackbar
