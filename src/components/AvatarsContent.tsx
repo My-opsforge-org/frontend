@@ -3,8 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { AvatarService, AvatarApiResponse, AvatarItem } from '../services/avatarService';
 import AvatarChat from './AvatarChat';
 
-export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }) {
+interface AvatarsContentProps {
+  isDarkTheme: boolean;
+  searchQuery?: string;
+}
+
+export default function AvatarsContent({ isDarkTheme, searchQuery = '' }: AvatarsContentProps) {
   const [avatars, setAvatars] = useState<AvatarItem[]>([]);
+  const [filteredAvatars, setFilteredAvatars] = useState<AvatarItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarItem | null>(null);
@@ -45,6 +51,7 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
         if (response.success) {
           console.log('Avatars data:', response.data); // Debug log
           setAvatars(response.data);
+          setFilteredAvatars(response.data);
         } else {
           setError('Failed to fetch avatars');
         }
@@ -58,6 +65,20 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
 
     fetchAvatars();
   }, []);
+
+  // Filter avatars based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredAvatars(avatars);
+    } else {
+      const filtered = avatars.filter(avatar => 
+        avatar.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        avatar.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        avatar.quote.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredAvatars(filtered);
+    }
+  }, [searchQuery, avatars]);
 
   const handleAvatarClick = (avatarItem: AvatarItem) => {
     setSelectedAvatar(avatarItem);
@@ -149,7 +170,7 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
             mb: 1
           }}
         >
-          Choose Your Avatar
+          Choose Your Companion
         </Typography>
         <Typography 
           variant="body1" 
@@ -164,6 +185,27 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
         >
           Select an inspiring figure to talk to
         </Typography>
+
+        {/* Search Results Info */}
+        {searchQuery && (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(31, 41, 55, 0.6)',
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
+              fontSize: '0.9rem',
+              fontWeight: 500,
+              mt: 2
+            }}
+          >
+            {filteredAvatars.length === 0 
+              ? `No avatars found for "${searchQuery}"`
+              : `Found ${filteredAvatars.length} avatar${filteredAvatars.length === 1 ? '' : 's'} for "${searchQuery}"`
+            }
+          </Typography>
+        )}
       </Box>
 
       {/* Content */}
@@ -173,6 +215,7 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
         flexDirection="column"
         px={6}
         py={6}
+        pb={12} // Add extra bottom padding to account for bottom navigation
         position="relative"
         zIndex={1}
         sx={{
@@ -212,7 +255,7 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
           </Box>
         ) : (
           <>
-            {console.log('Rendering avatars:', avatars)} {/* Debug log */}
+            {console.log('Rendering avatars:', filteredAvatars)} {/* Debug log */}
             <Box
               sx={{
                 display: 'grid',
@@ -243,7 +286,7 @@ export default function AvatarsContent({ isDarkTheme }: { isDarkTheme: boolean }
                 }
               }}
             >
-              {avatars.map((avatarItem, index) => (
+              {filteredAvatars.map((avatarItem, index) => (
                 <Tooltip
                   key={index}
                   title={

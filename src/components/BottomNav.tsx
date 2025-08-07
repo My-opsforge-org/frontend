@@ -8,7 +8,7 @@ import { BottomNavigation, BottomNavigationAction, Paper, Box } from '@mui/mater
 const TABS = [
   { label: 'Home', value: 'home', icon: <HomeIcon /> },
   { label: 'Explore', value: 'explore', icon: <PublicIcon /> },
-  { label: 'Avatars', value: 'avatars', icon: <AvatarIcon /> },
+  { label: 'Companions', value: 'avatars', icon: <AvatarIcon /> },
   { label: 'Chat', value: 'connect', icon: <ChatIcon /> },
   { label: 'Community', value: 'community', icon: <GroupsIcon /> },
 ];

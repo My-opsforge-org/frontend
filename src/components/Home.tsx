@@ -15,6 +15,8 @@ export default function Home() {
   const [name, setName] = useState('User');
   const [profileImage, setProfileImage] = useState('https://ui-avatars.com/api/?name=User');
   const [profileData, setProfileData] = useState({});
+  const [questLocation, setQuestLocation] = useState('');
+  const [questRadius, setQuestRadius] = useState(5);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -125,13 +127,22 @@ export default function Home() {
         setActiveTab={setActiveTab}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        onLocationChange={setQuestLocation}
+        onRadiusChange={setQuestRadius}
         onProfileUpdate={(newProfile: any) => {
           setProfileData(newProfile);
           setName(newProfile.name || 'User');
           setProfileImage(newProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(newProfile.name || 'User')}`);
         }}
       />
-      <Content isDarkTheme={isDark} activeTab={activeTab} setActiveTab={setActiveTab} searchQuery={searchQuery} />
+      <Content 
+        isDarkTheme={isDark} 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        searchQuery={searchQuery}
+        questLocation={questLocation}
+        questRadius={questRadius}
+      />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isDarkTheme={isDark} />
     </Box>
   );

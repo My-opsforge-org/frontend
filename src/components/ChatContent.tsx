@@ -612,7 +612,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
         display: 'flex', 
         flexDirection: 'column',
         position: 'relative',
-        pb: 6
+        pb: 12 // Increased bottom padding to account for bottom navigation
       }}>
         {/* Chat Header */}
         <Paper 
@@ -853,7 +853,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
         <Box sx={{ 
           flex: 1, 
           overflow: 'auto',
-          pb: 6,
+          pb: 12, // Increased bottom padding to account for bottom navigation
           bgcolor: isDarkTheme ? '#1C1C1E' : '#F8F9FA'
         }}>
           {conversationsLoading ? (
@@ -969,7 +969,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
         <Box sx={{ 
           flex: 1, 
           overflow: 'auto',
-          pb: 6,
+          pb: 12, // Increased bottom padding to account for bottom navigation
           bgcolor: isDarkTheme ? '#1C1C1E' : '#F8F9FA'
         }}>
           {usersLoading ? (

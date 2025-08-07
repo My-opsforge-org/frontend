@@ -4,11 +4,13 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SearchIcon from '@mui/icons-material/Search';
-import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider, Paper, InputAdornment } from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider, Paper, InputAdornment, Slider } from '@mui/material';
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../api';
 
-export default function Header({ name, profileImage, isDarkTheme, showOptions, setShowOptions, toggleTheme, handleLogout, profileData, activeTab, setActiveTab, onProfileUpdate, searchQuery, setSearchQuery }: any) {
+export default function Header({ name, profileImage, isDarkTheme, showOptions, setShowOptions, toggleTheme, handleLogout, profileData, activeTab, setActiveTab, onProfileUpdate, searchQuery, setSearchQuery, onLocationChange, onRadiusChange }: any) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -16,6 +18,8 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [locationQuery, setLocationQuery] = useState('');
+  const [radiusValue, setRadiusValue] = useState(5);
 
   React.useEffect(() => {
     setEditProfile(profileData || {});
@@ -26,6 +30,18 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
   };
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  // Handle search field click based on active tab
+  const handleSearchClick = () => {
+    if (activeTab === 'avatars') {
+      // Already on avatars tab, just focus the search
+      return;
+    } else if (activeTab !== 'connect' && activeTab !== 'community') {
+      setActiveTab('avatars');
+      // Set a flag to indicate search was clicked
+      localStorage.setItem('searchClicked', 'true');
+    }
   };
 
   return (
@@ -142,64 +158,174 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
           </Box>
         </Tooltip>
         
-        {/* Search Field */}
-        <TextField
-          placeholder="Search..."
-          value={searchQuery || ''}
-          onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
-          onClick={() => {
-            // Navigate to appropriate tab based on current context
-            if (activeTab !== 'connect' && activeTab !== 'community') {
-              setActiveTab('connect');
-              // Set a flag to indicate search was clicked
-              localStorage.setItem('searchClicked', 'true');
-            }
-          }}
-          size="small"
-          sx={{
-            ml: 'auto',
-            mr: 2,
-            width: 200,
-            cursor: 'pointer',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
+        {/* Location Field for Explore Tab */}
+        {activeTab === 'explore' ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, mx: 2, gap: 2 }}>
+            <TextField
+              placeholder="Enter location..."
+              value={locationQuery}
+              onChange={(e) => {
+                setLocationQuery(e.target.value);
+                if (onLocationChange) onLocationChange(e.target.value);
+              }}
+              size="small"
+              sx={{
+                flex: 1,
+                cursor: 'pointer',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  background: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(99, 102, 241, 0.1)',
+                  border: 'none',
+                  '&:hover': {
+                    background: isDarkTheme 
+                      ? 'rgba(255, 255, 255, 0.15)' 
+                      : 'rgba(99, 102, 241, 0.15)',
+                  },
+                  '&.Mui-focused': {
+                    background: isDarkTheme 
+                      ? 'rgba(255, 255, 255, 0.2)' 
+                      : 'rgba(99, 102, 241, 0.2)',
+                    boxShadow: isDarkTheme
+                      ? '0 0 0 2px rgba(255, 255, 255, 0.3)'
+                      : '0 0 0 2px rgba(99, 102, 241, 0.3)',
+                  }
+                },
+                '& .MuiInputBase-input': {
+                  color: isDarkTheme ? 'white' : '#1f2937',
+                  '&::placeholder': {
+                    color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(31, 41, 55, 0.6)',
+                    opacity: 1
+                  }
+                }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocationOnIcon sx={{ 
+                      color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
+                      fontSize: 20
+                    }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            
+            {/* Radius Slider */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              minWidth: 250,
+              px: 4,
+              py: 1,
+              borderRadius: 3,
               background: isDarkTheme 
                 ? 'rgba(255, 255, 255, 0.1)' 
                 : 'rgba(99, 102, 241, 0.1)',
-              border: 'none',
-              '&:hover': {
+              border: '1px solid',
+              borderColor: isDarkTheme 
+                ? 'rgba(255, 255, 255, 0.2)' 
+                : 'rgba(99, 102, 241, 0.2)',
+            }}>
+              <MyLocationIcon sx={{ 
+                color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
+                fontSize: 18
+              }} />
+              <Slider
+                value={radiusValue}
+                onChange={(_, value) => {
+                  setRadiusValue(value as number);
+                  if (onRadiusChange) onRadiusChange(value as number);
+                }}
+                min={1}
+                max={10}
+                step={1}
+                size="small"
+                sx={{
+                  color: isDarkTheme ? '#6366f1' : '#6366f1',
+                  '& .MuiSlider-track': {
+                    background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                  },
+                  '& .MuiSlider-thumb': {
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                    '&:hover': {
+                      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+                    }
+                  },
+                  '& .MuiSlider-rail': {
+                    background: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+                  }
+                }}
+              />
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(99, 102, 241, 0.8)',
+                  fontWeight: 600,
+                  minWidth: 25,
+                  textAlign: 'center'
+                }}
+              >
+                {radiusValue}km
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          /* Search Field for other tabs */
+          <TextField
+            placeholder="Search..."
+            value={searchQuery || ''}
+            onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+            onClick={handleSearchClick}
+            size="small"
+            sx={{
+              ml: 'auto',
+              mr: 2,
+              width: 200,
+              cursor: 'pointer',
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
                 background: isDarkTheme 
-                  ? 'rgba(255, 255, 255, 0.15)' 
-                  : 'rgba(99, 102, 241, 0.15)',
+                  ? 'rgba(255, 255, 255, 0.1)' 
+                  : 'rgba(99, 102, 241, 0.1)',
+                border: 'none',
+                '&:hover': {
+                  background: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : 'rgba(99, 102, 241, 0.15)',
+                },
+                '&.Mui-focused': {
+                  background: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.2)' 
+                    : 'rgba(99, 102, 241, 0.2)',
+                  boxShadow: isDarkTheme
+                    ? '0 0 0 2px rgba(255, 255, 255, 0.3)'
+                    : '0 0 0 2px rgba(99, 102, 241, 0.3)',
+                }
               },
-              '&.Mui-focused': {
-                background: isDarkTheme 
-                  ? 'rgba(255, 255, 255, 0.2)' 
-                  : 'rgba(99, 102, 241, 0.2)',
-                boxShadow: isDarkTheme
-                  ? '0 0 0 2px rgba(255, 255, 255, 0.3)'
-                  : '0 0 0 2px rgba(99, 102, 241, 0.3)',
+              '& .MuiInputBase-input': {
+                color: isDarkTheme ? 'white' : '#1f2937',
+                '&::placeholder': {
+                  color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(31, 41, 55, 0.6)',
+                  opacity: 1
+                }
               }
-            },
-            '& .MuiInputBase-input': {
-              color: isDarkTheme ? 'white' : '#1f2937',
-              '&::placeholder': {
-                color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(31, 41, 55, 0.6)',
-                opacity: 1
-              }
-            }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ 
-                  color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
-                  fontSize: 20
-                }} />
-              </InputAdornment>
-            ),
-          }}
-        />
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ 
+                    color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
+                    fontSize: 20
+                  }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
         
         <IconButton 
           color="inherit" 
