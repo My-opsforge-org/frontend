@@ -57,11 +57,11 @@ export class CommunityChatService {
       });
 
       this.socket.on('connect', () => {
-        // Socket connected
+        console.log('Community chat socket connected');
       });
 
       this.socket.on('disconnect', () => {
-        // Socket disconnected
+        console.log('Community chat socket disconnected');
       });
 
       this.socket.on('connect_error', (error: any) => {
@@ -69,6 +69,7 @@ export class CommunityChatService {
       });
 
       this.socket.on('receive_community_message', (message: CommunityMessage) => {
+        console.log('Received community message via socket:', message);
         // Notify all registered callbacks
         this.messageCallbacks.forEach((callback) => {
           callback(message);

@@ -63,6 +63,7 @@ import { useNavigate } from 'react-router-dom';
 import Profile from './Profile';
 import CommunityService, { CommunityWithLastMessage } from '../services/communityService';
 import CommunityMessageModal from './CommunityMessageModal';
+import { CommunityChatService, CommunityMessage } from '../services/communityChatService';
 
 // Extended User interface to include follow status
 interface ExtendedUser extends User {
@@ -199,7 +200,70 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
         return prev;
       });
     });
-  }, [users]);
+
+    // Initialize CommunityChatService socket and listen for community messages
+    const communitySocket = CommunityChatService.initializeSocket();
+    
+    // Listen for real-time community messages
+    const handleCommunityMessage = (communityMessage: CommunityMessage) => {
+      console.log('Received community message:', communityMessage);
+      const currentUserId = CommunityChatService.getCurrentUserId();
+      
+      // Don't update if it's the current user's message
+      if (communityMessage.sender_id === currentUserId) {
+        console.log('Skipping own message');
+        return;
+      }
+      
+      // Don't update if message is empty
+      if (!communityMessage.content || communityMessage.content.trim() === '') {
+        console.log('Skipping empty message');
+        return;
+      }
+      
+      // Don't increment unread count if user is currently in the community chat modal
+      const isCurrentlyInCommunityChat = communityMessageModalOpen && selectedCommunity?.id === communityMessage.community_id;
+      console.log('Is currently in community chat:', isCurrentlyInCommunityChat);
+      
+      // Update communities list for incoming messages
+      setCommunities(prev => {
+        const communityIndex = prev.findIndex(comm => comm.id === communityMessage.community_id);
+        
+        if (communityIndex !== -1) {
+          const updatedCommunities = [...prev];
+          const community = updatedCommunities[communityIndex];
+          
+          // Update the community with new message and increment unread count only if not currently viewing
+          updatedCommunities[communityIndex] = {
+            ...community,
+            lastMessage: communityMessage.content,
+            lastMessageTime: new Date(communityMessage.createdAt).toISOString(),
+            unreadCount: isCurrentlyInCommunityChat ? community.unreadCount : community.unreadCount + 1,
+            lastMessageSender: communityMessage.sender?.name || 'Unknown User'
+          };
+          
+          console.log('Updated community:', updatedCommunities[communityIndex]);
+          
+          // Sort communities by last message time (most recent first)
+          return updatedCommunities.sort((a, b) => {
+            return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
+          });
+        } else {
+          console.log('Community not found in list:', communityMessage.community_id);
+        }
+        
+        return prev;
+      });
+    };
+
+    // Subscribe to community messages
+    CommunityChatService.subscribeToCommunityMessages(handleCommunityMessage);
+
+    // Cleanup function
+    return () => {
+      CommunityChatService.unsubscribeFromCommunityMessages(handleCommunityMessage);
+    };
+  }, [users, communityMessageModalOpen, selectedCommunity]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -366,13 +430,54 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
     }
   };
 
-  const handleCommunitySelect = (community: CommunityWithLastMessage) => {
+  const handleCommunitySelect = async (community: CommunityWithLastMessage) => {
     setSelectedCommunity(community);
     setCommunityMessageModalOpen(true);
+    
+    // Mark messages as read when entering the community chat
+    if (community.unreadCount > 0) {
+      try {
+        await CommunityChatService.markCommunityMessagesAsRead(community.id);
+        
+        // Update the local state to reset unread count
+        setCommunities(prev => {
+          const updatedCommunities = prev.map(comm => 
+            comm.id === community.id 
+              ? { ...comm, unreadCount: 0 }
+              : comm
+          );
+          return updatedCommunities;
+        });
+      } catch (error) {
+        console.error('Failed to mark community messages as read:', error);
+      }
+    }
   };
 
   const handleCommunityMessageSent = () => {
-    // Reload communities to update last message
+    // Update the selected community's last message and reset unread count
+    if (selectedCommunity) {
+      setCommunities(prev => {
+        const updatedCommunities = prev.map(comm => 
+          comm.id === selectedCommunity.id 
+            ? {
+                ...comm,
+                lastMessage: 'You sent a message', // This will be updated when we reload
+                lastMessageTime: new Date().toISOString(),
+                unreadCount: 0, // Reset unread count for current user
+                lastMessageSender: 'You'
+              }
+            : comm
+        );
+        
+        // Sort communities by last message time (most recent first)
+        return updatedCommunities.sort((a, b) => {
+          return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
+        });
+      });
+    }
+    
+    // Also reload communities to get the actual message content
     loadCommunities();
   };
 
@@ -1499,6 +1604,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           onClose={() => {
             setCommunityMessageModalOpen(false);
             setSelectedCommunity(null);
+            // Refresh communities list when modal is closed to ensure unread counts are up to date
+            loadCommunities();
           }}
           communityId={selectedCommunity.id}
           communityName={selectedCommunity.name}
