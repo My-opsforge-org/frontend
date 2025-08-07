@@ -35,7 +35,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ExploreIcon from '@mui/icons-material/Explore';
-import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
+
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api';
 import MuiBox from '@mui/material/Box';
@@ -80,39 +80,58 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     level: 1,
     totalXP: 0,
     placesDiscovered: 0,
-    achievements: [],
-    completedLevels: [],
-    currentLevelProgress: {},
+    touristTrail: 0,
+    foodExplorer: 0,
+    culturalQuest: 0,
+    natureWanderer: 0,
+    entertainmentHunter: 0,
     lastPlayedAt: new Date().toISOString()
   });
   const [showLevelComplete, setShowLevelComplete] = useState(false);
-  const [showAchievement, setShowAchievement] = useState(false);
-  const [achievementMessage, setAchievementMessage] = useState('');
+
   const [progressLoading, setProgressLoading] = useState(true);
   const [showMap, setShowMap] = useState(false);
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [visitedSpots, setVisitedSpots] = useState<Set<string>>(new Set());
   const [xpNotification, setXpNotification] = useState<{xp: number, message: string} | null>(null);
 
-  // Debug: Monitor currentLevel changes
-  useEffect(() => {
-    if (currentLevel) {
-      console.log('CurrentLevel changed:', {
-        name: currentLevel.name,
-        progress: currentLevel.currentProgress,
-        required: currentLevel.requiredPlaces,
-        percentage: (currentLevel.currentProgress / currentLevel.requiredPlaces) * 100
-      });
-    }
-  }, [currentLevel]);
+
 
   // Helper function to get updated game levels
   const getUpdatedGameLevels = () => {
-    return gameLevels.map(level => ({
-      ...level,
-      completed: gameProgress.completedLevels.includes(level.id),
-      currentProgress: gameProgress.currentLevelProgress[level.id] || 0
-    }));
+    return gameLevels.map(level => {
+      let progress = 0;
+      let completed = false;
+      switch (level.id) {
+        case 1:
+          progress = gameProgress.touristTrail || 0;
+          completed = progress >= level.requiredPlaces;
+          break;
+        case 2:
+          progress = gameProgress.foodExplorer || 0;
+          completed = progress >= level.requiredPlaces;
+          break;
+        case 3:
+          progress = gameProgress.culturalQuest || 0;
+          completed = progress >= level.requiredPlaces;
+          break;
+        case 4:
+          progress = gameProgress.natureWanderer || 0;
+          completed = progress >= level.requiredPlaces;
+          break;
+        case 5:
+          progress = gameProgress.entertainmentHunter || 0;
+          completed = progress >= level.requiredPlaces;
+          break;
+        default:
+          break;
+      }
+      return {
+        ...level,
+        completed,
+        currentProgress: progress
+      };
+    });
   };
 
 
@@ -183,16 +202,6 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
         setProgressLoading(true);
         const progress = await userProgressService.getUserProgress();
         setGameProgress(progress);
-        
-        // Update game levels with progress from backend
-        const updatedLevels = gameLevels.map(level => ({
-          ...level,
-          completed: progress.completedLevels.includes(level.id),
-          currentProgress: progress.currentLevelProgress[level.id] || 0
-        }));
-        
-        // Update the gameLevels array (we'll need to handle this differently)
-        // For now, we'll use the progress data directly
       } catch (error) {
         console.error('Error loading user progress:', error);
         // Continue with default progress
@@ -232,7 +241,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   }, []);
 
   const handleLevelStart = async (level: GameLevel) => {
-    console.log('Starting quest with level:', level.name);
+    
     
     // Check if we have location and radius from header
     if (!questLocation || !questRadius) {
@@ -245,13 +254,32 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   };
 
   const handleStartQuestWithLocation = async (level: GameLevel, locationQuery: string, radius: number) => {
-    console.log('Starting quest with:', { level: level.name, locationQuery, radius });
+
     
     // Get the current progress for this level from gameProgress
-    const currentProgress = gameProgress.currentLevelProgress[level.id] || 0;
-    const levelWithProgress = { ...level, currentProgress };
+    let progress = 0;
+    switch (level.id) {
+      case 1:
+        progress = gameProgress.touristTrail || 0;
+        break;
+      case 2:
+        progress = gameProgress.foodExplorer || 0;
+        break;
+      case 3:
+        progress = gameProgress.culturalQuest || 0;
+        break;
+      case 4:
+        progress = gameProgress.natureWanderer || 0;
+        break;
+      case 5:
+        progress = gameProgress.entertainmentHunter || 0;
+        break;
+      default:
+        break;
+    }
+    const levelWithProgress = { ...level, currentProgress: progress };
     
-    console.log('Setting current level with progress:', { level: level.name, currentProgress });
+
     setCurrentLevel(levelWithProgress);
     
     setPlacesError('');
@@ -264,28 +292,28 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     try {
       // Geocode the location
       const token = localStorage.getItem('access_token');
-      console.log('Making geocode request for:', locationQuery);
+      
       const geocodeResponse = await fetch(`${API_BASE_URL}/explore/geocode?address=` + encodeURIComponent(locationQuery), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const geocodeData = await geocodeResponse.json();
-      console.log('Geocode response:', geocodeData);
+
       
       if (geocodeResponse.ok && typeof geocodeData.latitude === 'number' && typeof geocodeData.longitude === 'number') {
         const lat = geocodeData.latitude;
         const lng = geocodeData.longitude;
-        console.log('Coordinates found:', { lat, lng });
+
         
         // Fetch places with the specified radius
-        console.log('Making places request for:', { lat, lng, radius, type: level.type });
+
         const response = await fetch(`${API_BASE_URL}/explore/places?lat=${lat}&lng=${lng}&radius=${radius * 1000}&type=${level.type}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        console.log('Places response:', data);
+
         
         if (response.ok && data.results) {
-          console.log('Setting places and map:', { placesCount: data.results.length, mapCenter: { lat, lng } });
+
           setPlaces(data.results);
           setMapCenter({ lat, lng });
           setShowMap(true);
@@ -311,73 +339,66 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     const progress = Math.min(placesFound, level.requiredPlaces);
     const isCompleted = progress >= level.requiredPlaces;
     
-    // Update level progress in backend
-    try {
-      await userProgressService.updateLevelProgress({
-        levelId: level.id,
-        currentProgress: progress
-      });
-    } catch (error) {
-      console.error('Error updating level progress:', error);
-    }
-    
     if (isCompleted && !level.completed) {
-      // Level completed! Update backend with bonus XP
-      try {
-        const updatedProgress = await userProgressService.completeLevel({
-          levelId: level.id,
-          xpReward: level.xpReward,
-          placesFound: level.requiredPlaces
-        });
-        
-        setGameProgress(updatedProgress);
-        
-        // Show level completion notification with bonus XP
-        console.log(`🎉 Level ${level.name} completed! +${level.xpReward} bonus XP!`);
-        
-        // Check for new achievements
-        const newAchievements = updatedProgress.achievements.filter(
-          achievement => !gameProgress.achievements.includes(achievement)
-        );
-        
-        if (newAchievements.length > 0) {
-          setAchievementMessage(`🏆 ${newAchievements[0]} Achievement Unlocked!`);
-          setShowAchievement(true);
-        }
-        
-        setShowLevelComplete(true);
-      } catch (error) {
-        console.error('Error completing level:', error);
-      }
+      // Level completed! Show completion notification
+      setShowLevelComplete(true);
     }
   };
 
   const handlePlaceVisit = async (place: any) => {
     // Simulate visiting a place
     if (currentLevel) {
+      // Check if quest is already completed
+      if (currentLevel.currentProgress >= currentLevel.requiredPlaces) {
+        // Quest is already completed, only increment places discovered
+        setGameProgress(prev => ({
+          ...prev,
+          placesDiscovered: prev.placesDiscovered + 1
+        }));
+        
+        // Update only places discovered in backend
+        try {
+          await userProgressService.updateUserProgress({
+            placesDiscovered: gameProgress.placesDiscovered + 1
+          });
+        } catch (error) {
+          console.error('Error updating places discovered:', error);
+        }
+        return;
+      }
+      
       const newProgress = currentLevel.currentProgress + 1;
-      const updatedLevel = { ...currentLevel, currentProgress: newProgress };
-      
-      console.log('Progress Update:', {
-        oldProgress: currentLevel.currentProgress,
-        newProgress: newProgress,
-        requiredPlaces: currentLevel.requiredPlaces,
-        percentage: (newProgress / currentLevel.requiredPlaces) * 100,
-        levelName: currentLevel.name,
-        levelId: currentLevel.id
-      });
-      
-      // Calculate XP for this visit (small XP for each place visited)
       const visitXP = Math.floor(currentLevel.xpReward / currentLevel.requiredPlaces);
       
       // Update UI immediately for better user experience
-      setCurrentLevel(updatedLevel);
-      console.log('Updated currentLevel:', updatedLevel);
-      setGameProgress(prev => ({
-        ...prev,
-        totalXP: prev.totalXP + visitXP,
-        placesDiscovered: prev.placesDiscovered + 1
-      }));
+      setCurrentLevel({ ...currentLevel, currentProgress: newProgress });
+      setGameProgress(prev => {
+        const updated: any = {
+          ...prev,
+          totalXP: prev.totalXP + visitXP,
+          placesDiscovered: prev.placesDiscovered + 1
+        };
+        switch (currentLevel.id) {
+          case 1:
+            updated.touristTrail = newProgress;
+            break;
+          case 2:
+            updated.foodExplorer = newProgress;
+            break;
+          case 3:
+            updated.culturalQuest = newProgress;
+            break;
+          case 4:
+            updated.natureWanderer = newProgress;
+            break;
+          case 5:
+            updated.entertainmentHunter = newProgress;
+            break;
+          default:
+            break;
+        }
+        return updated;
+      });
       
       // Mark spot as visited
       setVisitedSpots(prev => new Set(Array.from(prev).concat([place.place_id])));
@@ -393,29 +414,43 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
       
       // Update progress in backend (non-blocking)
       try {
-        await userProgressService.updateLevelProgress({
-          levelId: currentLevel.id,
-          currentProgress: newProgress
-        });
-        
-        // Also update total XP and places discovered in backend
-        await userProgressService.updateUserProgress({
+        const update: any = {
           totalXP: gameProgress.totalXP + visitXP,
           placesDiscovered: gameProgress.placesDiscovered + 1
-        });
+        };
+        switch (currentLevel.id) {
+          case 1:
+            update.touristTrail = newProgress;
+            break;
+          case 2:
+            update.foodExplorer = newProgress;
+            break;
+          case 3:
+            update.culturalQuest = newProgress;
+            break;
+          case 4:
+            update.natureWanderer = newProgress;
+            break;
+          case 5:
+            update.entertainmentHunter = newProgress;
+            break;
+          default:
+            break;
+        }
+        await userProgressService.updateUserProgress(update);
         
       } catch (error) {
-        console.error('Error updating level progress:', error);
+        console.error('Error updating quest progress:', error);
       }
       
       if (newProgress >= currentLevel.requiredPlaces) {
-        checkLevelProgress(updatedLevel, newProgress);
+        checkLevelProgress(currentLevel, newProgress);
       }
     }
   };
 
   const handleMapSpotVisit = (spot: any) => {
-    console.log('Map spot visit called:', spot.name);
+    
     handlePlaceVisit(spot);
   };
 
@@ -443,6 +478,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
           : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
         position: 'relative',
+        pb: '100px', // Add bottom padding to account for BottomNav
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -525,23 +561,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           </Box>
         </Box>
 
-        {/* Achievements */}
-        {gameProgress.achievements.length > 0 && (
-          <Box display="flex" justifyContent="center" gap={1} flexWrap="wrap">
-            {gameProgress.achievements.map((achievement, index) => (
-              <Chip
-                key={index}
-                icon={<MilitaryTechIcon />}
-                label={achievement}
-                sx={{
-                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                  color: 'white',
-                  fontWeight: 600,
-                }}
-              />
-            ))}
-          </Box>
-        )}
+
       </Box>
 
       {/* XP Notification */}
@@ -689,6 +709,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                         </Typography>
                       </Box>
                       <LinearProgress
+                        key={`progress-${level.id}-${level.currentProgress}`}
                         variant="determinate"
                         value={(level.currentProgress / level.requiredPlaces) * 100}
                         sx={{
@@ -844,6 +865,8 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                 Explore the marked locations within {questRadius || 5}km radius
               </Typography>
               
+
+              
                              
               <QuestMap
                 isDarkTheme={isDarkTheme}
@@ -924,56 +947,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
         </DialogActions>
       </Dialog>
 
-      {/* Achievement Dialog */}
-      <Dialog
-        open={showAchievement}
-        onClose={() => setShowAchievement(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: isDarkTheme
-              ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 35, 0.98) 100%)'
-              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%)',
-            backdropFilter: 'blur(20px)',
-            border: isDarkTheme
-              ? '1px solid rgba(255, 255, 255, 0.1)'
-              : '1px solid rgba(99, 102, 241, 0.1)',
-            borderRadius: 4,
-          }
-        }}
-      >
-        <DialogTitle sx={{ textAlign: 'center', color: isDarkTheme ? 'white' : 'black' }}>
-          🏆 Achievement Unlocked!
-        </DialogTitle>
-        <DialogContent>
-          <Box textAlign="center" py={2}>
-            <MilitaryTechIcon sx={{ fontSize: 64, color: '#fbbf24', mb: 2 }} />
-            <Typography variant="h6" sx={{ mb: 1, color: isDarkTheme ? 'white' : 'black' }}>
-              {achievementMessage}
-            </Typography>
-            <Typography variant="body1" sx={{ color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)' }}>
-              Keep exploring to unlock more achievements!
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', p: 3 }}>
-          <Button
-            onClick={() => setShowAchievement(false)}
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              color: 'white',
-              fontWeight: 600,
-              '&:hover': {
-                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-              }
-            }}
-          >
-            Awesome!
-          </Button>
-        </DialogActions>
-      </Dialog>
+
     </Box>
   );
 } 

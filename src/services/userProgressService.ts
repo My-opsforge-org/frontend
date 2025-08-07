@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../api';
+import { API_BASE_URL_chat } from '../api';
 
 export interface UserProgress {
   id: number;
@@ -6,9 +6,11 @@ export interface UserProgress {
   level: number;
   totalXP: number;
   placesDiscovered: number;
-  achievements: string[];
-  completedLevels: number[];
-  currentLevelProgress: Record<number, number>;
+  touristTrail: number;
+  foodExplorer: number;
+  culturalQuest: number;
+  natureWanderer: number;
+  entertainmentHunter: number;
   lastPlayedAt: string;
   user?: {
     name: string;
@@ -49,7 +51,7 @@ class UserProgressService {
 
   async getUserProgress(): Promise<UserProgress> {
     try {
-      const response = await fetch(`${API_BASE_URL}/user-progress`, {
+      const response = await fetch(`${API_BASE_URL_chat}/user-progress`, {
         method: 'GET',
         headers: this.getAuthHeaders()
       });
@@ -68,7 +70,7 @@ class UserProgressService {
 
   async updateUserProgress(progress: Partial<UserProgress>): Promise<UserProgress> {
     try {
-      const response = await fetch(`${API_BASE_URL}/user-progress`, {
+      const response = await fetch(`${API_BASE_URL_chat}/user-progress`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(progress)
@@ -88,7 +90,7 @@ class UserProgressService {
 
   async completeLevel(levelData: LevelCompletionData): Promise<UserProgress> {
     try {
-      const response = await fetch(`${API_BASE_URL}/user-progress/complete-level`, {
+      const response = await fetch(`${API_BASE_URL_chat}/user-progress/complete-level`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(levelData)
@@ -108,7 +110,7 @@ class UserProgressService {
 
   async updateLevelProgress(progressData: LevelProgressData): Promise<{ levelId: number; currentProgress: number; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/user-progress/level-progress`, {
+      const response = await fetch(`${API_BASE_URL_chat}/user-progress/level-progress`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(progressData)
@@ -128,7 +130,7 @@ class UserProgressService {
 
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/user-progress/leaderboard`, {
+      const response = await fetch(`${API_BASE_URL_chat}/user-progress/leaderboard`, {
         method: 'GET',
         headers: this.getAuthHeaders()
       });
