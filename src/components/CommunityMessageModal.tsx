@@ -8,7 +8,9 @@ import {
   Paper,
   InputAdornment,
   Tooltip,
-  CircularProgress
+  CircularProgress,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import CommunityMembersModal from './CommunityMembersModal';
 import {
@@ -20,16 +22,18 @@ import {
   ArrowBack as ArrowBackIcon,
   People as PeopleIcon
 } from '@mui/icons-material';
+import { CommunityChatService, CommunityMessage } from '../services/communityChatService';
 
 interface CommunityMessageModalProps {
   open: boolean;
   onClose: () => void;
+  communityId: number;
   communityName: string;
   isDarkTheme: boolean;
 }
 
 interface Message {
-  id: number;
+  id: string;
   text: string;
   sender: string;
   senderAvatar?: string;
@@ -40,97 +44,132 @@ interface Message {
 const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
   open,
   onClose,
+  communityId,
   communityName,
   isDarkTheme
 }) => {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hey everyone! Welcome to the community! 👋",
-      sender: "Sarah Johnson",
-      senderAvatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      timestamp: new Date(Date.now() - 3600000),
-      isOwnMessage: false
-    },
-    {
-      id: 2,
-      text: "Thanks Sarah! Excited to be here!",
-      sender: "Mike Chen",
-      senderAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      timestamp: new Date(Date.now() - 3000000),
-      isOwnMessage: false
-    },
-    {
-      id: 3,
-      text: "Anyone up for a weekend trip?",
-      sender: "You",
-      timestamp: new Date(Date.now() - 1800000),
-      isOwnMessage: true
-    },
-    {
-      id: 4,
-      text: "I'm definitely interested! Where are you thinking?",
-      sender: "Emma Davis",
-      senderAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      timestamp: new Date(Date.now() - 900000),
-      isOwnMessage: false
-    },
-    {
-      id: 5,
-      text: "Maybe we could go hiking? The weather looks great!",
-      sender: "Alex Rodriguez",
-      senderAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      timestamp: new Date(Date.now() - 300000),
-      isOwnMessage: false
-    }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [memberModalOpen, setMemberModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentUserId = CommunityChatService.getCurrentUserId();
+
+  // Subscribe to real-time messages
+  useEffect(() => {
+    if (open && communityId) {
+      // Initialize socket connection
+      CommunityChatService.initializeSocket();
+      
+      // Join the community chat room
+      CommunityChatService.joinCommunityRoom(communityId);
+      
+      // Subscribe to new messages
+      const handleNewMessage = (newMessage: CommunityMessage) => {
+        console.log('Handling new community message:', newMessage);
+        
+        // Don't add the message if it's from the current user (to avoid duplicates)
+        if (newMessage.sender_id === currentUserId) {
+          console.log('Skipping own message to avoid duplicate');
+          return;
+        }
+        
+        const formattedMessage: Message = {
+          id: newMessage.id,
+          text: newMessage.content,
+          sender: newMessage.sender?.name || 'Unknown User',
+          senderAvatar: newMessage.sender?.avatarUrl,
+          timestamp: new Date(newMessage.createdAt),
+          isOwnMessage: newMessage.sender_id === currentUserId
+        };
+        console.log('Formatted message:', formattedMessage);
+        setMessages(prev => [...prev, formattedMessage]);
+      };
+
+      CommunityChatService.subscribeToCommunityMessages(handleNewMessage);
+
+      // Cleanup on unmount
+      return () => {
+        CommunityChatService.unsubscribeFromCommunityMessages(handleNewMessage);
+        CommunityChatService.leaveCommunityRoom(communityId);
+      };
+    }
+  }, [open, communityId, currentUserId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Load messages when modal opens
+  useEffect(() => {
+    if (open && communityId) {
+      loadMessages();
+    }
+  }, [open, communityId]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
-        id: messages.length + 1,
-        text: message.trim(),
-        sender: "You",
-        timestamp: new Date(),
-        isOwnMessage: true
-      };
-      setMessages([...messages, newMessage]);
-      setMessage('');
+  const loadMessages = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await CommunityChatService.getCommunityChatHistory(communityId);
+      if (response.success && response.data) {
+        const formattedMessages: Message[] = response.data.map(msg => ({
+          id: msg.id,
+          text: msg.content,
+          sender: msg.sender?.name || 'Unknown User',
+          senderAvatar: msg.sender?.avatarUrl,
+          timestamp: new Date(msg.createdAt),
+          isOwnMessage: msg.sender_id === currentUserId
+        }));
+        setMessages(formattedMessages);
+      } else {
+        setError(response.error || 'Failed to load messages');
+      }
+    } catch (error) {
+      setError('Failed to load messages');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (message.trim() && !sending) {
+      setSending(true);
+      setError(null);
       
-      // Simulate someone typing and responding
-      setIsTyping(true);
-      setTimeout(() => {
-        const responses = [
-          "That sounds great! 👍",
-          "I'm in! When are we leaving?",
-          "Perfect timing!",
-          "Can't wait for this trip!",
-          "This is going to be amazing!"
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        const responseMessage: Message = {
-          id: messages.length + 2,
-          text: randomResponse,
-          sender: "Community Member",
-          senderAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-          timestamp: new Date(),
-          isOwnMessage: false
-        };
-        setMessages(prev => [...prev, responseMessage]);
-        setIsTyping(false);
-      }, 2000);
+      try {
+        const response = await CommunityChatService.sendCommunityMessage(communityId, message.trim());
+        if (response.success && response.data) {
+          const newMessage = response.data[0];
+          const formattedMessage: Message = {
+            id: newMessage.id,
+            text: newMessage.content,
+            sender: newMessage.sender?.name || 'You',
+            senderAvatar: newMessage.sender?.avatarUrl,
+            timestamp: new Date(newMessage.createdAt),
+            isOwnMessage: newMessage.sender_id === currentUserId
+          };
+          setMessages(prev => [...prev, formattedMessage]);
+          setMessage('');
+          
+          // Scroll to bottom after sending
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        } else {
+          setError(response.error || 'Failed to send message');
+        }
+      } catch (error) {
+        setError('Failed to send message');
+      } finally {
+        setSending(false);
+      }
     }
   };
 
@@ -243,98 +282,92 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
             gap: 2
           }}
         >
-          {messages.map((msg) => (
-            <Box
-              key={msg.id}
-              sx={{
-                display: 'flex',
-                justifyContent: msg.isOwnMessage ? 'flex-end' : 'flex-start',
-                mb: 1
-              }}
-            >
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <Alert severity="error" sx={{ width: '100%' }}>
+                {error}
+              </Alert>
+            </Box>
+          ) : messages.length === 0 ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <Typography color="text.secondary">
+                No messages yet. Start the conversation!
+              </Typography>
+            </Box>
+          ) : (
+            messages.map((msg) => (
               <Box
+                key={msg.id}
                 sx={{
-                  maxWidth: '70%',
                   display: 'flex',
-                  flexDirection: msg.isOwnMessage ? 'row-reverse' : 'row',
-                  alignItems: 'flex-end',
-                  gap: 1
+                  justifyContent: msg.isOwnMessage ? 'flex-end' : 'flex-start',
+                  mb: 1
                 }}
               >
-                {!msg.isOwnMessage && (
-                  <Avatar
-                    src={msg.senderAvatar}
-                    sx={{ width: 32, height: 32 }}
-                  >
-                    <PersonIcon fontSize="small" />
-                  </Avatar>
-                )}
-                <Paper
+                <Box
                   sx={{
-                    p: 1.5,
-                    bgcolor: msg.isOwnMessage 
-                      ? (isDarkTheme ? '#6366f1' : '#3b82f6')
-                      : (isDarkTheme ? '#374151' : '#f3f4f6'),
-                    color: msg.isOwnMessage ? '#ffffff' : (isDarkTheme ? '#ffffff' : '#1f2937'),
-                    borderRadius: 2,
-                    maxWidth: '100%',
-                    wordBreak: 'break-word'
+                    maxWidth: '70%',
+                    display: 'flex',
+                    flexDirection: msg.isOwnMessage ? 'row-reverse' : 'row',
+                    alignItems: 'flex-end',
+                    gap: 1
                   }}
                 >
                   {!msg.isOwnMessage && (
+                    <Avatar
+                      src={msg.senderAvatar}
+                      sx={{ width: 32, height: 32 }}
+                    >
+                      <PersonIcon fontSize="small" />
+                    </Avatar>
+                  )}
+                  <Paper
+                    sx={{
+                      p: 1.5,
+                      bgcolor: msg.isOwnMessage 
+                        ? (isDarkTheme ? '#6366f1' : '#3b82f6')
+                        : (isDarkTheme ? '#374151' : '#f3f4f6'),
+                      color: msg.isOwnMessage ? '#ffffff' : (isDarkTheme ? '#ffffff' : '#1f2937'),
+                      borderRadius: 2,
+                      maxWidth: '100%',
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    {!msg.isOwnMessage && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          mb: 0.5,
+                          fontWeight: 600,
+                          color: msg.isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : (isDarkTheme ? '#9ca3af' : '#6b7280')
+                        }}
+                      >
+                        {msg.sender}
+                      </Typography>
+                    )}
+                    <Typography variant="body2">
+                      {msg.text}
+                    </Typography>
                     <Typography
                       variant="caption"
                       sx={{
                         display: 'block',
-                        mb: 0.5,
-                        fontWeight: 600,
-                        color: msg.isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : (isDarkTheme ? '#9ca3af' : '#6b7280')
+                        mt: 0.5,
+                        color: msg.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : (isDarkTheme ? '#6b7280' : '#9ca3af'),
+                        textAlign: msg.isOwnMessage ? 'right' : 'left'
                       }}
                     >
-                      {msg.sender}
+                      {formatTime(msg.timestamp)}
                     </Typography>
-                  )}
-                  <Typography variant="body2">
-                    {msg.text}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      mt: 0.5,
-                      color: msg.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : (isDarkTheme ? '#6b7280' : '#9ca3af'),
-                      textAlign: msg.isOwnMessage ? 'right' : 'left'
-                    }}
-                  >
-                    {formatTime(msg.timestamp)}
-                  </Typography>
-                </Paper>
+                  </Paper>
+                </Box>
               </Box>
-            </Box>
-          ))}
-          
-          {isTyping && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  <PersonIcon fontSize="small" />
-                </Avatar>
-                <Paper
-                  sx={{
-                    p: 1.5,
-                    bgcolor: isDarkTheme ? '#374151' : '#f3f4f6',
-                    borderRadius: 2
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <CircularProgress size={12} />
-                    <Typography variant="body2" color="text.secondary">
-                      typing...
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Box>
-            </Box>
+            ))
           )}
           
           <div ref={messagesEndRef} />
@@ -343,11 +376,26 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
         {/* Input Area */}
         <Box
           sx={{
-            p: 2,
+            p: 3,
+            pb: 12, // Increased bottom padding to account for bottom navigation
             borderTop: isDarkTheme 
-              ? '1px solid rgba(255, 255, 255, 0.1)' 
-              : '1px solid rgba(0, 0, 0, 0.1)',
-            bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff'
+              ? '1px solid rgba(255, 255, 255, 0.08)' 
+              : '1px solid rgba(0, 0, 0, 0.08)',
+            bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff',
+            backdropFilter: 'blur(10px)',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: isDarkTheme
+                ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, transparent 100%)'
+                : 'linear-gradient(135deg, rgba(99, 102, 241, 0.01) 0%, transparent 100%)',
+              pointerEvents: 'none',
+            }
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -375,17 +423,19 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
                           <EmojiIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Send message">
-                        <IconButton
-                          size="small"
-                          onClick={handleSendMessage}
-                          disabled={!message.trim()}
-                          sx={{
-                            color: message.trim() ? (isDarkTheme ? '#6366f1' : '#3b82f6') : 'inherit'
-                          }}
-                        >
-                          <SendIcon fontSize="small" />
-                        </IconButton>
+                                              <Tooltip title="Send message">
+                        <span>
+                          <IconButton
+                            size="small"
+                            onClick={handleSendMessage}
+                            disabled={!message.trim() || sending}
+                            sx={{
+                              color: message.trim() && !sending ? (isDarkTheme ? '#6366f1' : '#3b82f6') : 'inherit'
+                            }}
+                          >
+                            {sending ? <CircularProgress size={16} /> : <SendIcon fontSize="small" />}
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     </Box>
                   </InputAdornment>

@@ -1,10 +1,11 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Home from './components/Home';
 import Login from './components/Login';
 import Profile from './components/Profile';
 import Register from './components/Register';
+import { CommunityChatService } from './services/communityChatService';
 
 // Theme context for toggling dark/light mode
 const ThemeToggleContext = createContext({ toggleTheme: () => {}, isDark: true });
@@ -14,6 +15,14 @@ function App() {
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
+
+  // Initialize community chat socket when app starts
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      CommunityChatService.initializeSocket();
+    }
+  }, []);
 
   const toggleTheme = () => {
     setIsDarkTheme((prev) => {

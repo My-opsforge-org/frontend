@@ -125,6 +125,7 @@ const CommunityList: React.FC<CommunityListProps> = ({
         <CommunityMessageModal
           open={messageModalOpen}
           onClose={handleCloseMessageModal}
+          communityId={selectedCommunityForMessage.id}
           communityName={selectedCommunityForMessage.name}
           isDarkTheme={isDarkTheme}
         />

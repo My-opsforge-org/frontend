@@ -617,21 +617,21 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff',
           color: isDarkTheme ? '#ffffff' : '#000000',
           zIndex: 1300,
-          display: 'flex',
-          flexDirection: 'column',
+        display: 'flex', 
+        flexDirection: 'column',
           height: '100vh',
           width: '100vw'
         }}
       >
         {/* Header */}
         <Box
-          sx={{
+          sx={{ 
             borderBottom: isDarkTheme 
               ? '1px solid rgba(255, 255, 255, 0.08)' 
               : '1px solid rgba(0, 0, 0, 0.08)',
             p: 2.5,
-            display: 'flex',
-            alignItems: 'center',
+            display: 'flex', 
+            alignItems: 'center', 
             justifyContent: 'space-between',
             bgcolor: isDarkTheme ? '#1a1a1a' : '#ffffff',
             backdropFilter: 'blur(10px)',
@@ -664,8 +664,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                 transition: 'all 0.2s ease',
               }}
             >
-              <ArrowBackIcon />
-            </IconButton>
+            <ArrowBackIcon />
+          </IconButton>
             <Avatar
               src={selectedUser.avatar}
               sx={{
@@ -677,10 +677,10 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                   : '0 4px 12px rgba(99, 102, 241, 0.15)',
               }}
             >
-              {selectedUser.name && selectedUser.name.length > 0
-                ? selectedUser.name.charAt(0).toUpperCase()
-                : 'U'}
-            </Avatar>
+            {selectedUser.name && selectedUser.name.length > 0
+              ? selectedUser.name.charAt(0).toUpperCase()
+              : 'U'}
+          </Avatar>
             <Box>
               <Typography 
                 variant="h6" 
@@ -691,8 +691,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                   mb: 0.5
                 }}
               >
-                {selectedUser.name}
-              </Typography>
+              {selectedUser.name}
+            </Typography>
               <Box display="flex" alignItems="center" gap={1}>
                 <Box
                   sx={{
@@ -715,9 +715,9 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                     fontSize: '0.875rem'
                   }}
                 >
-                  {selectedUser.isOnline ? 'Online' : 'Offline'}
-                </Typography>
-              </Box>
+              {selectedUser.isOnline ? 'Online' : 'Offline'}
+            </Typography>
+          </Box>
             </Box>
           </Box>
           <Box display="flex" gap={1}>
@@ -733,8 +733,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                 transition: 'all 0.2s ease',
               }}
             >
-              <CallIcon />
-            </IconButton>
+            <CallIcon />
+          </IconButton>
             <IconButton
               sx={{
                 color: isDarkTheme ? '#d1d5db' : '#374151',
@@ -747,8 +747,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                 transition: 'all 0.2s ease',
               }}
             >
-              <VideoIcon />
-            </IconButton>
+            <VideoIcon />
+          </IconButton>
             <IconButton
               onClick={handleMenuOpen}
               sx={{
@@ -762,8 +762,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                 transition: 'all 0.2s ease',
               }}
             >
-              <MoreHorizIcon />
-            </IconButton>
+            <MoreHorizIcon />
+          </IconButton>
           </Box>
         </Box>
 
@@ -772,7 +772,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           {/* Messages Area */}
           <Box
             sx={{
-              flex: 1,
+          flex: 1, 
               overflowY: 'auto',
               p: 3,
               display: 'flex',
@@ -796,14 +796,14 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
               }
             }}
           >
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                 <CircularProgress />
-              </Box>
-            ) : (
-              messages.map((message) => (
+            </Box>
+          ) : (
+            messages.map((message) => (
                 <Box
-                  key={message.id}
+                key={message.id}
                   sx={{
                     display: 'flex',
                     justifyContent: message.sender === 'me' ? 'flex-end' : 'flex-start',
@@ -885,14 +885,14 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                     </Paper>
                   </Box>
                 </Box>
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </Box>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </Box>
 
           {/* Input Area */}
           <Box
-                          sx={{
+          sx={{ 
                 p: 3,
                 pb: 12, // Increased bottom padding to account for bottom navigation
                 borderTop: isDarkTheme 
@@ -916,15 +916,15 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
               }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <TextField
-                fullWidth
-                multiline
-                maxRows={4}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+            <TextField
+              fullWidth
+              multiline
+              maxRows={4}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
-                variant="outlined"
+              variant="outlined"
                 size="small"
                 InputProps={{
                   endAdornment: (
@@ -932,8 +932,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <Tooltip title="Attach file">
                           <IconButton 
-                            size="small"
-                            sx={{
+              size="small"
+              sx={{
                               color: isDarkTheme ? '#9ca3af' : '#6b7280',
                               bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
                               borderRadius: 1.5,
@@ -945,10 +945,10 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                             }}
                           >
                             <AttachFileIcon fontSize="small" />
-                          </IconButton>
+            </IconButton>
                         </Tooltip>
                         <Tooltip title="Add emoji">
-                          <IconButton 
+            <IconButton 
                             size="small"
                             sx={{
                               color: isDarkTheme ? '#9ca3af' : '#6b7280',
@@ -968,14 +968,14 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                           <IconButton
                             size="small"
                             onClick={handleSendMessage}
-                            disabled={!newMessage.trim() || loading}
-                            sx={{
+              disabled={!newMessage.trim() || loading}
+              sx={{ 
                               color: newMessage.trim() ? '#ffffff' : (isDarkTheme ? '#6b7280' : '#9ca3af'),
                               bgcolor: newMessage.trim() 
                                 ? (isDarkTheme ? '#6366f1' : '#3b82f6') 
                                 : (isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'),
                               borderRadius: 1.5,
-                              '&:hover': {
+                '&:hover': {
                                 bgcolor: newMessage.trim() 
                                   ? (isDarkTheme ? '#5b21b6' : '#2563eb') 
                                   : (isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'),
@@ -985,9 +985,9 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                             }}
                           >
                             <SendIcon fontSize="small" />
-                          </IconButton>
+            </IconButton>
                         </Tooltip>
-                      </Box>
+          </Box>
                     </InputAdornment>
                   )
                 }}
