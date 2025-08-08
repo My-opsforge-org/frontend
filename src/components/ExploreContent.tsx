@@ -2,26 +2,14 @@ import {
   Box, 
   Typography, 
   Button, 
-  TextField, 
   CircularProgress, 
-  List, 
-  ListItem, 
-  ListItemText, 
   Paper, 
-  Divider, 
-  ListItemSecondaryAction, 
-  IconButton, 
-  Select, 
-  MenuItem, 
-  InputLabel, 
-  FormControl, 
   useTheme, 
   useMediaQuery,
   Card,
   CardContent,
   Chip,
   LinearProgress,
-  Fade,
   Zoom,
   Dialog,
   DialogTitle,
@@ -29,21 +17,13 @@ import {
   DialogActions,
   Avatar
 } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
-import DirectionsIcon from '@mui/icons-material/Directions';
-import SearchIcon from '@mui/icons-material/Search';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ExploreIcon from '@mui/icons-material/Explore';
 
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api';
-import MuiBox from '@mui/material/Box';
-import AvatarComponent from '@mui/material/Avatar';
-import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import userProgressService, { UserProgress } from '../services/userProgressService';
 import QuestMap from './QuestMap';
-import SimpleQuestMap from './SimpleQuestMap';
 
 interface GameLevel {
   id: number;
@@ -63,7 +43,6 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   questRadius?: number;
 }) {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [error, setError] = useState('');
   const [places, setPlaces] = useState<any[]>([]);

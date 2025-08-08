@@ -50,36 +50,48 @@ export class ChatService {
       return null;
     }
 
+    // Get backend URL from environment variable or default to localhost
+    let backendUrl = process.env.REACT_APP_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+    
+    // If BASE_URL includes /api, remove it for Socket.IO connection
+    if (backendUrl.includes('/api')) {
+      backendUrl = backendUrl.replace('/api', '');
+    }
+    
     try {
-      this.socket = io('http://localhost:5002', {
+      this.socket = io(backendUrl, {
         auth: {
           token: token
         },
         transports: ['websocket', 'polling']
       });
 
+      console.log('Connecting to backend Socket.IO server at:', backendUrl);
+
       this.socket.on('connect', () => {
-        // Socket connected successfully
+        console.log('✅ Socket.IO connected successfully to backend');
+        console.log('Backend URL:', backendUrl);
       });
 
-      this.socket.on('disconnect', () => {
-        // Socket disconnected
+      this.socket.on('disconnect', (reason: string) => {
+        console.log('❌ Socket.IO disconnected:', reason);
       });
 
       this.socket.on('connect_error', (error: any) => {
-        // Socket connection error
+        console.error('❌ Socket.IO connection error:', error);
+        console.log('Attempted to connect to:', backendUrl);
       });
 
       this.socket.on('receive_message', (message: any) => {
-        // Received message via Socket.IO
+        console.log('📨 Received message via Socket.IO:', message);
       });
 
       this.socket.on('private_message', (message: any) => {
-        // Received private message via Socket.IO
+        console.log('📨 Received private message via Socket.IO:', message);
       });
 
       this.socket.on('receive_private_message', (message: any) => {
-        // Received private message via Socket.IO (alternative event name)
+        console.log('📨 Received private message via Socket.IO (alternative):', message);
       });
 
       return this.socket;
@@ -90,10 +102,24 @@ export class ChatService {
 
   // Get socket instance
   static getSocket(): any {
-    if (!this.socket) {
+    if (!this.socket || !this.socket.connected) {
       return this.initializeSocket();
     }
     return this.socket;
+  }
+
+  // Check if socket is connected
+  static isConnected(): boolean {
+    return this.socket && this.socket.connected;
+  }
+
+  // Disconnect socket
+  static disconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      console.log('🔌 Socket.IO disconnected');
+    }
   }
 
   // Join a chat room
@@ -431,7 +457,6 @@ export class ChatService {
       });
       
       if (response.ok) {
-        const data = await response.json();
         return { success: true, data: true };
       } else {
         const errorText = await response.text();
@@ -463,7 +488,7 @@ export class ChatService {
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
+        await response.text();
       }
       
       return { success: true, data: true };

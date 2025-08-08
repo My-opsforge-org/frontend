@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemButton, ListItemText, ListItemSecondaryAction, Button, IconButton, Tooltip, Box } from '@mui/material';
+import { ListItem, ListItemButton, ListItemText, ListItemSecondaryAction, Button, IconButton, Tooltip, Box } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import MessageIcon from '@mui/icons-material/Message';
 import React, { useState } from 'react';

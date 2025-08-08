@@ -105,7 +105,6 @@ export class CommunityChatService {
   static joinCommunityRoom(communityId: number): void {
     const socket = this.getSocket();
     if (socket) {
-      const roomId = `community_${communityId}`;
       socket.emit('join_community_room', communityId);
     }
   }

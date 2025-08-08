@@ -3,7 +3,6 @@ import { GoogleMap, Marker, InfoWindow, Circle } from '@react-google-maps/api';
 import { Box, Typography, Paper, Chip, IconButton, Button } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import PlaceIcon from '@mui/icons-material/Place';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 interface QuestSpot {

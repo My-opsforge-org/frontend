@@ -17,7 +17,7 @@ import {
   Alert
 } from '@mui/material';
 import { Person as PersonIcon } from '@mui/icons-material';
-import communityService, { CommunityMember, CommunityMembersResponse } from '../services/communityService';
+import communityService, { CommunityMembersResponse } from '../services/communityService';
 
 interface CommunityMembersModalProps {
   open: boolean;

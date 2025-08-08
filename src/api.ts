@@ -1,18 +1,32 @@
-// Backend Node.js API Configuration (Port 5002)
-export const API_BASE_URL = 'http://localhost:5002/api';
-
-// Legacy reference for backward compatibility (will be removed in future versions)
-export const API_BASE_URL_chat = 'http://localhost:5002/api';
-
-// Environment-based configuration
-const getApiBaseUrl = () => {
-  // Check if we're in production or have a specific environment variable
+// Backend Node.js API Configuration
+const getBackendUrl = () => {
+  // Check if we have a BASE_URL environment variable (primary)
+  if (process.env.REACT_APP_BASE_URL) {
+    return process.env.REACT_APP_BASE_URL;
+  }
+  
+  // Check if we have a specific backend URL environment variable
+  if (process.env.REACT_APP_BACKEND_URL) {
+    return `${process.env.REACT_APP_BACKEND_URL}/api`;
+  }
+  
+  // Check if we have a specific API URL environment variable
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
   
   // Default to localhost:5002 for development
   return 'http://localhost:5002/api';
+};
+
+export const API_BASE_URL = getBackendUrl();
+
+// Legacy reference for backward compatibility (will be removed in future versions)
+export const API_BASE_URL_chat = getBackendUrl();
+
+// Environment-based configuration
+const getApiBaseUrl = () => {
+  return getBackendUrl();
 };
 
 // Export the dynamic API base URL

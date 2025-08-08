@@ -9,15 +9,13 @@ import {
   InputAdornment,
   Tooltip,
   CircularProgress,
-  Alert,
-  Snackbar
+  Alert
 } from '@mui/material';
 import CommunityMembersModal from './CommunityMembersModal';
 import {
   Send as SendIcon,
   AttachFile as AttachFileIcon,
   EmojiEmotions as EmojiIcon,
-  Close as CloseIcon,
   Person as PersonIcon,
   ArrowBack as ArrowBackIcon,
   People as PeopleIcon

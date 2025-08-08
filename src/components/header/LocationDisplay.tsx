@@ -1,8 +1,5 @@
 import SearchIcon from '@mui/icons-material/Search';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import MyLocationIcon from '@mui/icons-material/MyLocation';
-import EditIcon from '@mui/icons-material/Edit';
-import { Box, Typography, TextField, InputAdornment, IconButton, CircularProgress, Button } from '@mui/material';
+import { Box, TextField, InputAdornment } from '@mui/material';
 import React from 'react';
 
 interface LocationDisplayProps {

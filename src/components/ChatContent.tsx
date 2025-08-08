@@ -18,7 +18,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   InputAdornment,
   Menu,
   MenuItem,
@@ -31,7 +30,6 @@ import {
 } from '@mui/material';
 import {
   Send as SendIcon,
-  Search as SearchIcon,
   AttachFile as AttachFileIcon,
   EmojiEmotions as EmojiIcon,
   Videocam as VideoIcon,
@@ -49,14 +47,12 @@ import {
   Message, 
   Conversation, 
   formatTime, 
-  createNewConversation,
   createNewMessage,
   updateConversationLastMessage,
   markConversationAsRead,
   searchConversations,
   sortConversations
 } from './ChatUtils';
-import MessageBubble from './MessageBubble';
 import { ChatService, User } from '../services/chatService';
 import { API_BASE_URL } from '../api';
 import { useNavigate } from 'react-router-dom';
@@ -143,7 +139,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
 
   // Initialize Socket.IO connection when component mounts
   useEffect(() => {
-    const socket = ChatService.initializeSocket();
+    ChatService.initializeSocket();
     
           // Listen for real-time messages globally (for all conversations)
       ChatService.onReceiveMessage((nodeMessage) => {
@@ -207,7 +203,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       });
 
     // Initialize CommunityChatService socket and listen for community messages
-    const communitySocket = CommunityChatService.initializeSocket();
+    CommunityChatService.initializeSocket();
     
     // Listen for real-time community messages
     const handleCommunityMessage = (communityMessage: CommunityMessage) => {
@@ -744,16 +740,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
     });
   };
 
-  const handleDownload = (message: Message) => {
-    if (message.fileUrl) {
-      const link = document.createElement('a');
-      link.href = message.fileUrl;
-      link.download = message.fileName || 'download';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
+
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
