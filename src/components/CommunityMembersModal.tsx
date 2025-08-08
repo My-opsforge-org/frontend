@@ -42,6 +42,7 @@ const CommunityMembersModal: React.FC<CommunityMembersModalProps> = ({
     if (open && communityId) {
       fetchMembers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, communityId]);
 
   const fetchMembers = async () => {

@@ -103,6 +103,7 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
     if (open && communityId) {
       loadMessages();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, communityId]);
 
   useEffect(() => {

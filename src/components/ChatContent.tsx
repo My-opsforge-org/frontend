@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -117,20 +117,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Load conversations and users on component mount
-  useEffect(() => {
-    loadConversations();
-    loadUsers();
-    loadCommunities();
-    loadCurrentUser();
-    
-    // Check if user came from search field and switch to "All Users" tab
-    const searchClicked = localStorage.getItem('searchClicked');
-    if (searchClicked === 'true') {
-      setTabValue(1); // Switch to "All Users" tab
-      localStorage.removeItem('searchClicked'); // Clear the flag
-    }
-  }, []);
+
 
   // Initialize Socket.IO connection when component mounts
   useEffect(() => {
@@ -434,6 +421,21 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       setCommunitiesLoading(false);
     }
   };
+
+  // Load conversations and users on component mount
+  useEffect(() => {
+    loadConversations();
+    loadUsers();
+    loadCommunities();
+    loadCurrentUser();
+    
+    // Check if user came from search field and switch to "All Users" tab
+    const searchClicked = localStorage.getItem('searchClicked');
+    if (searchClicked === 'true') {
+      setTabValue(1); // Switch to "All Users" tab
+      localStorage.removeItem('searchClicked'); // Clear the flag
+    }
+  }, []);
 
   const handleCommunitySelect = async (community: CommunityWithLastMessage) => {
     setSelectedCommunity(community);

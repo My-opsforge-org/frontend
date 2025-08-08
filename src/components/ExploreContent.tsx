@@ -41,8 +41,6 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   questRadius?: number;
 }) {
   const [places, setPlaces] = useState<any[]>([]);
-  const [address, setAddress] = useState('');
-  const [geocodeResult, setGeocodeResult] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [currentLevel, setCurrentLevel] = useState<GameLevel | null>(null);
   const [gameProgress, setGameProgress] = useState<UserProgress>({
     id: 0,
