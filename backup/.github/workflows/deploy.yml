@@ -1,0 +1,162 @@
+name: Deploy Frontend to VM
+
+on:
+  push:
+    branches:
+      - main
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: List root directory after checkout
+        run: ls -l
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./
+
+      - name: Set production environment variables
+        run: |
+          echo "Setting up production environment variables..."
+          echo "Backend URL will be configured for cross-server communication"
+        working-directory: ./
+
+      - name: Build React app
+        run: npm run build
+        working-directory: ./
+        env:
+          # Backend Server Configuration (for cross-server communication)
+          # REACT_APP_BASE_URL: ${{ secrets.BASE_URL || 'http://4.206.189.155:5002/' }}
+          REACT_APP_BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://4.206.189.155:5002' }}
+          
+          # Client Configuration
+          REACT_APP_CLIENT_URL: ${{ secrets.FRONTEND_URL || 'http://localhost:3000' }}
+          
+          # Environment
+          NODE_ENV: production
+          
+          # Build Configuration
+          GENERATE_SOURCEMAP: false
+          REACT_APP_VERSION: 1.0.0
+          
+          # Debug Configuration
+          REACT_APP_DEBUG: false
+          REACT_APP_LOG_LEVEL: error
+          
+          # Feature Flags
+          REACT_APP_ENABLE_SOCKET_IO: true
+          REACT_APP_ENABLE_REAL_TIME_CHAT: true
+          REACT_APP_ENABLE_AVATAR_CHAT: true
+          REACT_APP_ENABLE_COMMUNITY_CHAT: true
+          
+          # External Services
+          REACT_APP_GOOGLE_MAPS_API_KEY: AIzaSyDMOv3ucij8PQPtVLPvFZ88arhaRfl0lEA
+          REACT_APP_GOOGLE_PLACES_API_KEY: AIzaSyDMOv3ucij8PQPtVLPvFZ88arhaRfl0lEA
+
+      - name: List root directory after build
+        run: ls -l
+
+      - name: List build directory in root
+        run: ls -l build || echo "No build directory in root."
+
+      - name: Verify build directory exists
+        run: |
+          if [ ! -d "build" ]; then
+            echo "ERROR: Build directory does not exist!"
+            echo "Current directory contents:"
+            ls -la
+            exit 1
+          else
+            echo "Build directory exists and contains:"
+            ls -la build/
+          fi
+
+      - name: Clean target directory on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend/*"
+
+      - name: Ensure frontend directory exists on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'mkdir -p /home/${{ secrets.VM_USER }}/frontend'
+
+      - name: Create nginx config script
+        run: |
+          cat > nginx-frontend-setup.sh <<'EOF'
+          #!/bin/bash
+          sudo apt-get update && sudo apt-get install -y nginx
+          sudo tee /etc/nginx/sites-available/frontend > /dev/null <<EOC
+          server {
+              listen 80;
+              server_name _;
+              root /home/${{ secrets.VM_USER }}/frontend;
+              index index.html;
+              location / {
+                  try_files \$uri /index.html;
+              }
+          }
+          EOC
+          sudo ln -sf /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/frontend
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo chown -R www-data:www-data /home/${{ secrets.VM_USER }}/frontend
+          sudo chmod -R 755 /home/${{ secrets.VM_USER }}/frontend
+          sudo nginx -t
+          EOF
+
+      - name: Remove existing nginx script directory on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'rm -rf /home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh'
+
+      - name: Copy nginx config script to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          password: ${{ secrets.VM_PASSWORD }}
+          source: "nginx-frontend-setup.sh"
+          target: "/home/${{ secrets.VM_USER }}/"
+          overwrite: true
+          timeout: 30s
+
+      - name: Run nginx config script on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'bash /home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh'
+
+      - name: Set permissions on target directory
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'sudo chown -R ${{ secrets.VM_USER }}:${{ secrets.VM_USER }} /home/${{ secrets.VM_USER }}/frontend && sudo chmod -R 755 /home/${{ secrets.VM_USER }}/frontend'
+
+      - name: Copy build to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          password: ${{ secrets.VM_PASSWORD }}
+          source: "build/"
+          target: "/home/${{ secrets.VM_USER }}/frontend"
+          strip_components: 1
+          timeout: 60s
+
+      - name: Restart nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          password: ${{ secrets.VM_PASSWORD }}
+          script: |
+            sudo systemctl restart nginx
+          timeout: 30s 
