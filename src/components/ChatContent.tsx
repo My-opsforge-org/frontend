@@ -130,7 +130,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       setTabValue(1); // Switch to "All Users" tab
       localStorage.removeItem('searchClicked'); // Clear the flag
     }
-  }, [loadCurrentUser, loadUsers, loadConversations, loadCommunities]);
+  }, []);
 
   // Initialize Socket.IO connection when component mounts
   useEffect(() => {
