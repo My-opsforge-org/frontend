@@ -5,7 +5,6 @@ import {
   TextField,
   IconButton,
   Avatar,
-  CircularProgress,
   Alert,
   Tooltip,
   Fade,

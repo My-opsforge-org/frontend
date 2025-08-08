@@ -40,15 +40,9 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   questLocation?: string;
   questRadius?: number;
 }) {
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [error, setError] = useState('');
   const [places, setPlaces] = useState<any[]>([]);
-  const [placesLoading, setPlacesLoading] = useState(false);
-  const [placesError, setPlacesError] = useState('');
   const [address, setAddress] = useState('');
   const [geocodeResult, setGeocodeResult] = useState<{lat: number, lng: number, address: string} | null>(null);
-  const [geocodeLoading, setGeocodeLoading] = useState(false);
-  const [geocodeError, setGeocodeError] = useState('');
   const [currentLevel, setCurrentLevel] = useState<GameLevel | null>(null);
   const [gameProgress, setGameProgress] = useState<UserProgress>({
     id: 0,
@@ -189,32 +183,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     loadUserProgress();
   }, []);
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          if (!address && !geocodeResult && !places.length) {
-            try {
-              const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-              const data = await response.json();
-              if (data && data.display_name) {
-                setAddress(data.display_name);
-              } else {
-                setAddress(`${pos.coords.latitude},${pos.coords.longitude}`);
-              }
-            } catch {
-              setAddress(`${pos.coords.latitude},${pos.coords.longitude}`);
-            }
-            setGeocodeResult({ lat: pos.coords.latitude, lng: pos.coords.longitude, address: `${pos.coords.latitude},${pos.coords.longitude}` });
-          }
-        },
-        (err) => setError('Location access denied or unavailable')
-      );
-    } else {
-      setError('Geolocation is not supported by this browser');
-    }
-  }, [address, geocodeResult, places.length]);
+
 
   const handleLevelStart = async (level: GameLevel) => {
     
@@ -258,11 +227,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
 
     setCurrentLevel(levelWithProgress);
     
-    setPlacesError('');
-    setGeocodeError('');
     setPlaces([]);
-    setPlacesLoading(true);
-    setGeocodeLoading(true);
     setShowMap(false);
     
     try {
@@ -296,18 +261,14 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           // Don't call checkLevelProgress here as it might interfere with manual progress updates
         } else {
           console.error('Places API error:', data);
-          setPlacesError(data.error || 'Could not fetch places');
         }
       } else {
         console.error('Geocode API error:', geocodeData);
-        setGeocodeError(geocodeData.error || 'Could not find coordinates for the location');
       }
     } catch (err) {
       console.error('Network error:', err);
-      setPlacesError('Network error');
     } finally {
-      setPlacesLoading(false);
-      setGeocodeLoading(false);
+      // Loading states removed
     }
   };
 
