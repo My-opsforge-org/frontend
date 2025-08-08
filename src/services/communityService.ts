@@ -96,4 +96,5 @@ class CommunityService {
   }
 }
 
-export default new CommunityService();
+const communityService = new CommunityService();
+export default communityService;

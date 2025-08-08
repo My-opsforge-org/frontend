@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, Marker, InfoWindow, Circle } from '@react-google-maps/api';
-import { Box, Typography, Paper, Chip, IconButton, Button } from '@mui/material';
+import { Box, Typography, Paper, Chip, Button } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -38,7 +38,6 @@ const QuestMap: React.FC<QuestMapProps> = ({
 }) => {
   const [selectedSpot, setSelectedSpot] = useState<QuestSpot | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
 
   // Check if Google Maps API is loaded
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);

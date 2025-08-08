@@ -4,13 +4,9 @@ import {
   Typography,
   TextField,
   IconButton,
-  Paper,
   Avatar,
-  Divider,
   CircularProgress,
   Alert,
-  Button,
-  InputAdornment,
   Tooltip,
   Fade,
   Zoom
@@ -18,8 +14,7 @@ import {
 import {
   Send as SendIcon,
   ArrowBack as ArrowBackIcon,
-  Close as CloseIcon,
-  SmartToy as BotIcon
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { AvatarItem } from '../services/avatarService';
 import { AvatarChatService } from '../services/avatarChatService';
@@ -65,12 +60,7 @@ export default function AvatarChat({ avatar, isDarkTheme, onClose }: AvatarChatP
     setMessages([welcomeMessage]);
   }, [avatar]);
 
-  const simulateTyping = async (response: string) => {
-    setIsTyping(true);
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-    setIsTyping(false);
-    return response;
-  };
+
 
   const generateAvatarResponse = async (userMessage: string): Promise<string> => {
     try {

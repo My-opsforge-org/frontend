@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Card, CardContent, Chip, CircularProgress, Alert, Avatar, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Avatar, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { AvatarService, AvatarApiResponse, AvatarItem } from '../services/avatarService';
 import AvatarChat from './AvatarChat';

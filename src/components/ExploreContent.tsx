@@ -4,8 +4,6 @@ import {
   Button, 
   CircularProgress, 
   Paper, 
-  useTheme, 
-  useMediaQuery,
   Card,
   CardContent,
   Chip,
@@ -42,7 +40,6 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   questLocation?: string;
   questRadius?: number;
 }) {
-  const theme = useTheme();
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [error, setError] = useState('');
   const [places, setPlaces] = useState<any[]>([]);

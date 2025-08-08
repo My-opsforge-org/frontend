@@ -148,4 +148,5 @@ class UserProgressService {
   }
 }
 
-export default new UserProgressService(); 
+const userProgressService = new UserProgressService();
+export default userProgressService; 

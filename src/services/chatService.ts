@@ -559,7 +559,6 @@ export class ChatService {
       });
 
       if (response.ok) {
-        const data = await response.json();
         return { success: true, data: true };
       } else {
         return { success: false, error: `Backend not accessible: ${response.status}` };
