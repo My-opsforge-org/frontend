@@ -110,34 +110,50 @@ If deployment completely fails:
 3. **Check VM health** and restart if necessary
 4. **Verify all services** are running on VM
 
-### VM Connection Timeout - Alternative Approaches
+### VM Connection Issues - Diagnosis and Solutions
 
-If SSH connection to VM continues to timeout:
+#### SSH Connection Working but Directory Issues
 
-1. **Build locally and wait for VM access**:
+**Symptoms:**
+- SSH connection succeeds (no timeout)
+- Error: `chown: cannot access '/home/***/frontend': No such file or directory`
+
+**Solution:**
+- The workflow now properly creates the frontend directory
+- Added error handling with `|| true` to prevent failures
+
+#### SSH Connection Timeout
+
+**Symptoms:**
+- `ssh: connect to host *** port 22: Connection timed out`
+
+**Possible Causes:**
+1. VM is stopped or restarting
+2. SSH service not running on VM
+3. Firewall blocking port 22
+4. Network connectivity issues
+5. Incorrect IP address in GitHub secrets
+
+**Solutions:**
+
+1. **Check VM Status**:
+   - Go to cloud provider dashboard
+   - Verify VM is running
+   - Check if IP address is correct
+
+2. **Test SSH Manually**:
    ```bash
-   cd frontend
-   npm ci
-   npm run build
+   ssh username@your-vm-ip
    ```
-   - Build files will be ready in `build/` folder
-   - Deploy manually when VM is accessible
 
-2. **Use GitHub Actions with retry**:
-   - Push to master branch
-   - GitHub Actions will retry deployment
-   - Set up webhook notifications for deployment status
+3. **Use Build-Only Workflow**:
+   - Use `build-only.yml` workflow
+   - Download artifacts for manual deployment
 
-3. **Alternative deployment platforms**:
-   - Netlify, Vercel, or GitHub Pages for static hosting
+4. **Alternative Deployment**:
+   - Netlify, Vercel, or GitHub Pages
    - Azure Static Web Apps
    - AWS S3 + CloudFront
-
-4. **Local development server**:
-   ```bash
-   npm start  # For development
-   npx serve -s build  # For testing production build
-   ```
 
 ## Backend Deployment Issues
 

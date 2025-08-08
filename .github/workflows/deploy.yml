@@ -84,12 +84,12 @@ jobs:
       - name: Clean target directory on VM
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend/*"
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "rm -rf /home/${{ secrets.VM_USER }}/frontend/*" || true
 
-      # - name: Ensure frontend directory exists on VM
-      #   run: |
-      #     sudo apt-get update && sudo apt-get install -y sshpass
-      #     sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'mkdir -p /home/${{ secrets.VM_USER }}/frontend'
+      - name: Ensure frontend directory exists on VM
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'mkdir -p /home/${{ secrets.VM_USER }}/frontend'
 
       - name: Create nginx config script
         run: |
@@ -117,7 +117,7 @@ jobs:
       - name: Remove existing nginx script directory on VM
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'rm -rf /home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh'
+          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'rm -rf /home/${{ secrets.VM_USER }}/nginx-frontend-setup.sh' || true
 
       - name: Copy nginx config script to VM
         uses: appleboy/scp-action@v0.1.7
