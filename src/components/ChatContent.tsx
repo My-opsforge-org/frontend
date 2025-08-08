@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -435,6 +435,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       setTabValue(1); // Switch to "All Users" tab
       localStorage.removeItem('searchClicked'); // Clear the flag
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCommunitySelect = async (community: CommunityWithLastMessage) => {
