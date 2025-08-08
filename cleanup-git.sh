@@ -22,4 +22,4 @@ echo "Committing changes..."
 git commit -m "Remove node_modules from tracking and update .gitignore"
 
 echo "Cleanup completed!"
-echo "You can now try: git push origin main"
+echo "You can now try: git push origin master"

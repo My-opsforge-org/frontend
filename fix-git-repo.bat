@@ -32,7 +32,7 @@ echo WARNING: This will completely replace the remote repository!
 echo Press any key to continue or Ctrl+C to cancel...
 pause
 
-git push -f origin main
+git push -f origin master
 
 echo.
 echo Repository fixed! The large files have been removed from history.
