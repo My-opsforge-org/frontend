@@ -74,6 +74,14 @@ export class ChatService {
         // Received message via Socket.IO
       });
 
+      this.socket.on('private_message', (message: any) => {
+        // Received private message via Socket.IO
+      });
+
+      this.socket.on('receive_private_message', (message: any) => {
+        // Received private message via Socket.IO (alternative event name)
+      });
+
       return this.socket;
     } catch (error) {
       return null;
@@ -92,8 +100,9 @@ export class ChatService {
   static joinChatRoom(userId1: number, userId2: number): void {
     const socket = this.getSocket();
     if (socket) {
-      const roomId = [userId1, userId2].sort().join('_');
-      socket.emit('join_room', roomId);
+      // Users are automatically joined to their personal room on connection
+      // No need to join specific chat rooms for private messages
+      console.log('User automatically joined to personal room');
     }
   }
 
@@ -104,6 +113,14 @@ export class ChatService {
       socket.on('receive_message', (message: NodeMessage) => {
         callback(message);
       });
+      
+      socket.on('private_message', (message: NodeMessage) => {
+        callback(message);
+      });
+      
+      socket.on('receive_private_message', (message: NodeMessage) => {
+        callback(message);
+      });
     }
   }
 
@@ -111,9 +128,7 @@ export class ChatService {
   static sendMessageRealtime(senderId: number, receiverId: number, content: string): void {
     const socket = this.getSocket();
     if (socket) {
-      const roomId = [senderId, receiverId].sort().join('_');
-      socket.emit('send_message', {
-        roomId,
+      socket.emit('private_message', {
         receiverId,
         content
       });

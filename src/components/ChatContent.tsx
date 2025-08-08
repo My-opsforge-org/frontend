@@ -145,61 +145,66 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
   useEffect(() => {
     const socket = ChatService.initializeSocket();
     
-    // Listen for real-time messages globally (for all conversations)
-    ChatService.onReceiveMessage((nodeMessage) => {
-      const currentUserId = ChatService.getCurrentUserId();
-      
-      // Don't add messages sent by the current user
-      if (nodeMessage.sender_id === currentUserId) {
-        return;
-      }
-      
-      // Don't add empty messages
-      if (!nodeMessage.content || nodeMessage.content.trim() === '') {
-        return;
-      }
-      
-      // Update conversations list for incoming messages
-      setConversations(prev => {
-        // Find the sender user in our users list
-        const senderUser = users.find(user => user.id === nodeMessage.sender_id);
+          // Listen for real-time messages globally (for all conversations)
+      ChatService.onReceiveMessage((nodeMessage) => {
+        console.log('Received message via Socket.IO:', nodeMessage);
+        const currentUserId = ChatService.getCurrentUserId();
         
-        if (senderUser) {
-          const conversationId = nodeMessage.sender_id.toString();
-          const existingConversation = prev.find(conv => conv.id === conversationId);
-          
-          if (existingConversation) {
-            // Update existing conversation
-            return prev.map(conv => 
-              conv.id === conversationId 
-                ? { 
-                    ...conv, 
-                    lastMessage: nodeMessage.content,
-                    lastMessageTime: new Date(),
-                    unreadCount: conv.unreadCount + 1 // Increment unread count
-                  }
-                : conv
-            );
-          } else {
-            // Create new conversation
-            const newConversation: Conversation = {
-              id: conversationId,
-              name: senderUser.name || senderUser.email,
-              avatar: senderUser.avatarUrl || '',
-              lastMessage: nodeMessage.content,
-              lastMessageTime: new Date(),
-              unreadCount: 1,
-              isOnline: false,
-              participants: [conversationId, 'me'],
-              isGroup: false
-            };
-            return [newConversation, ...prev];
-          }
+        // Don't add messages sent by the current user
+        if (nodeMessage.sender_id === currentUserId) {
+          console.log('Skipping own message');
+          return;
         }
         
-        return prev;
+        // Don't add empty messages
+        if (!nodeMessage.content || nodeMessage.content.trim() === '') {
+          console.log('Skipping empty message');
+          return;
+        }
+        
+        console.log('Processing incoming message from user:', nodeMessage.sender_id);
+        
+        // Update conversations list for incoming messages
+        setConversations(prev => {
+          // Find the sender user in our users list
+          const senderUser = users.find(user => user.id === nodeMessage.sender_id);
+          
+          if (senderUser) {
+            const conversationId = nodeMessage.sender_id.toString();
+            const existingConversation = prev.find(conv => conv.id === conversationId);
+            
+            if (existingConversation) {
+              // Update existing conversation
+              return prev.map(conv => 
+                conv.id === conversationId 
+                  ? { 
+                      ...conv, 
+                      lastMessage: nodeMessage.content,
+                      lastMessageTime: new Date(),
+                      unreadCount: conv.unreadCount + 1 // Increment unread count
+                    }
+                  : conv
+              );
+            } else {
+              // Create new conversation
+              const newConversation: Conversation = {
+                id: conversationId,
+                name: senderUser.name || senderUser.email,
+                avatar: senderUser.avatarUrl || '',
+                lastMessage: nodeMessage.content,
+                lastMessageTime: new Date(),
+                unreadCount: 1,
+                isOnline: false,
+                participants: [conversationId, 'me'],
+                isGroup: false
+              };
+              return [newConversation, ...prev];
+            }
+          }
+          
+          return prev;
+        });
       });
-    });
 
     // Initialize CommunityChatService socket and listen for community messages
     const communitySocket = CommunityChatService.initializeSocket();
@@ -290,20 +295,25 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       
       // Listen for real-time messages for the currently selected user
       const handleSelectedUserMessage = (nodeMessage: any) => {
+        console.log('Selected user message handler:', nodeMessage);
         const currentUserId = ChatService.getCurrentUserId();
         
         // Don't add messages sent by the current user
         if (nodeMessage.sender_id === currentUserId) {
+          console.log('Skipping own message in selected user handler');
           return;
         }
         
         // Don't add empty messages
         if (!nodeMessage.content || nodeMessage.content.trim() === '') {
+          console.log('Skipping empty message in selected user handler');
           return;
         }
         
         // Only handle messages for the currently selected user
         if (nodeMessage.sender_id === selectedUser.id || nodeMessage.receiver_id === selectedUser.id) {
+          console.log('Processing message for selected user:', selectedUser.id);
+          
           // Convert Node.js message format to frontend format
           const message: Message = {
             id: nodeMessage.id,
@@ -323,12 +333,16 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
             );
             
             if (messageExists) {
+              console.log('Message already exists, skipping');
               return prev;
             }
             
+            console.log('Adding new message to selected user chat');
             const newMessages = [...prev, message];
             return newMessages;
           });
+        } else {
+          console.log('Message not for selected user. Sender:', nodeMessage.sender_id, 'Receiver:', nodeMessage.receiver_id, 'Selected:', selectedUser.id);
         }
       };
       

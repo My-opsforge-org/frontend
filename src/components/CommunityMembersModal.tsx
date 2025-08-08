@@ -230,9 +230,9 @@ const CommunityMembersModal: React.FC<CommunityMembersModalProps> = ({
                             />
                           )}
                         </Box>
-                        {member.interests.length > 0 && (
+                        {Array.isArray(member.interests) && member.interests.length > 0 && (
                           <Box display="flex" gap={0.5} flexWrap="wrap" mt={1}>
-                            {member.interests.slice(0, 3).map((interest, index) => (
+                            {(Array.isArray(member.interests) ? member.interests.slice(0, 3) : []).map((interest, index) => (
                               <Chip
                                 key={index}
                                 label={interest}
@@ -245,7 +245,7 @@ const CommunityMembersModal: React.FC<CommunityMembersModalProps> = ({
                                 }}
                               />
                             ))}
-                            {member.interests.length > 3 && (
+                            {Array.isArray(member.interests) && member.interests.length > 3 && (
                               <Chip
                                 label={`+${member.interests.length - 3} more`}
                                 size="small"
@@ -259,16 +259,18 @@ const CommunityMembersModal: React.FC<CommunityMembersModalProps> = ({
                             )}
                           </Box>
                         )}
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: isDarkTheme ? '#6b7280' : '#9ca3af',
-                            display: 'block',
-                            mt: 1
-                          }}
-                        >
-                          Joined {formatDate(member.joinedAt)}
-                        </Typography>
+                        {member.joinedAt && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: isDarkTheme ? '#6b7280' : '#9ca3af',
+                              display: 'block',
+                              mt: 1
+                            }}
+                          >
+                            Joined {formatDate(member.joinedAt)}
+                          </Typography>
+                        )}
                       </Box>
                     }
                   />

@@ -26,22 +26,47 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Basic frontend validation
+    if (!name.trim()) {
+      setError('Name is required');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
+    
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password })
       });
       const data = await response.json();
       if (response.ok) {
         navigate('/login');
       } else {
-        setError(data.error || 'Registration failed');
+        // Handle validation errors
+        if (data.details && Array.isArray(data.details)) {
+          const errorMessages = data.details.map((error: any) => error.msg).join(', ');
+          setError(errorMessages);
+        } else {
+          setError(data.error || 'Registration failed');
+        }
       }
     } catch (err) {
       setError('Network error');

@@ -1,46 +1,291 @@
-# Getting Started with Create React App
+# Go Tripping Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React TypeScript frontend for the Go Tripping application, designed to work with the Node.js backend.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- **Modern React**: Built with React 18 and TypeScript
+- **Material-UI**: Beautiful, responsive UI components
+- **Real-time Chat**: Socket.IO integration for live messaging
+- **Social Features**: Posts, comments, reactions, communities
+- **Exploration**: Location-based place discovery
+- **AI Integration**: Avatar chat system
+- **Progress Tracking**: User progress and gamification
+- **Theme Support**: Dark/light theme toggle
+- **Responsive Design**: Mobile-first approach
 
-### `npm start`
+## 📋 Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Node.js (v16 or higher)
+- npm or yarn
+- Backend Node.js server running on port 5002
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🛠️ Installation
 
-### `npm test`
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd frontend
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### `npm run build`
+3. **Configure environment variables**
+   Create a `.env` file in the frontend directory:
+   ```bash
+   # API Configuration
+   REACT_APP_API_URL=http://localhost:5002/api
+   
+   # Socket.IO Configuration
+   REACT_APP_SOCKET_URL=http://localhost:5002
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🏃‍♂️ Available Scripts
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- `npm start` - Start the development server
+- `npm run build` - Build the app for production
+- `npm test` - Run tests
+- `npm run eject` - Eject from Create React App
 
-### `npm run eject`
+## 🔌 API Integration
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+The frontend is configured to use the Backend_node (port 5002) for all API endpoints.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### API Configuration
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+The main API configuration is in `src/api.ts`:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```typescript
+// Backend Node.js API Configuration (Port 5002)
+export const API_BASE_URL = 'http://localhost:5002/api';
 
-## Learn More
+// API Endpoints configuration
+export const API_ENDPOINTS = {
+  // Authentication
+  LOGIN: '/login',
+  REGISTER: '/register',
+  PROFILE: '/users/profile',
+  
+  // Users
+  USERS: '/users',
+  USER_PROFILE: (id: number) => `/users/${id}`,
+  
+  // Communities
+  COMMUNITIES: '/communities',
+  COMMUNITY_DETAILS: (id: number) => `/communities/${id}`,
+  
+  // Posts
+  POSTS: '/posts',
+  POST_DETAILS: (id: number) => `/posts/${id}`,
+  
+  // Chat
+  CHAT_SEND: '/chat/send',
+  CHAT_HISTORY: (userId1: number, userId2: number) => `/chat/history/${userId1}/${userId2}`,
+  
+  // Explore
+  EXPLORE_GEOCODE: '/explore/geocode',
+  EXPLORE_PLACES: '/explore/places',
+  
+  // And more...
+};
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Key Endpoints
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **Authentication**: `/api/login`, `/api/register`, `/api/logout`
+- **Users**: `/api/users`, `/api/users/profile`
+- **Communities**: `/api/communities`
+- **Posts**: `/api/posts`
+- **Chat**: `/api/chat`
+- **Explore**: `/api/explore`
+- **Avatar**: `/api/avatar`
+- **Progress**: `/api/progress`
+
+## 🎨 UI Components
+
+### Core Components
+
+- **Header**: Navigation and user profile
+- **BottomNav**: Mobile navigation
+- **ChatContent**: Real-time chat interface
+- **CommunityContent**: Community management
+- **ExploreContent**: Location-based exploration
+- **HomeContent**: Feed and posts
+- **Profile**: User profiles and settings
+
+### Theme Support
+
+The application supports both light and dark themes:
+
+```typescript
+// Theme toggle hook
+const { isDark, toggleTheme } = useThemeToggle();
+
+// Usage in components
+<Box sx={{ 
+  background: isDark ? '#1a1a2e' : '#f8fafc',
+  color: isDark ? 'white' : 'black'
+}}>
+```
+
+## 🔐 Authentication
+
+The frontend uses JWT tokens for authentication:
+
+```typescript
+// Login
+const response = await fetch(`${API_BASE_URL}/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password })
+});
+
+// Store token
+localStorage.setItem('access_token', data.access_token);
+
+// Use token in requests
+const headers = {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json'
+};
+```
+
+## 💬 Real-time Chat
+
+Socket.IO integration for real-time messaging:
+
+```typescript
+// Initialize socket connection
+const socket = io('http://localhost:5002', {
+  auth: { token: jwtToken }
+});
+
+// Send message
+socket.emit('private_message', {
+  receiverId: userId,
+  content: message
+});
+
+// Receive message
+socket.on('private_message', (message) => {
+  // Handle incoming message
+});
+```
+
+## 🗺️ Exploration Features
+
+Location-based features using Google Places API:
+
+```typescript
+// Geocode address
+const geocodeResponse = await fetch(
+  `${API_BASE_URL}/explore/geocode?address=${encodeURIComponent(address)}`
+);
+
+// Get nearby places
+const placesResponse = await fetch(
+  `${API_BASE_URL}/explore/places?lat=${lat}&lng=${lng}&radius=${radius}`
+);
+```
+
+## 🤖 AI Avatar Chat
+
+Integration with OpenAI for AI-powered conversations:
+
+```typescript
+// Send message to avatar
+const response = await fetch(`${API_BASE_URL}/avatar/chat`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    characterName: 'Elon Musk',
+    message: 'Hello!',
+    conversationHistory: []
+  })
+});
+```
+
+## 📊 Progress Tracking
+
+User progress and gamification system:
+
+```typescript
+// Get user progress
+const progress = await fetch(`${API_BASE_URL}/progress`);
+
+// Complete level
+const completion = await fetch(`${API_BASE_URL}/progress/complete-level`, {
+  method: 'POST',
+  body: JSON.stringify({ levelId: 1, xpReward: 100 })
+});
+```
+
+## 🧪 Testing
+
+Run tests with:
+```bash
+npm test
+```
+
+## 🚀 Deployment
+
+1. **Build the application**
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy to your hosting service**
+   - Netlify, Vercel, or any static hosting service
+   - Configure environment variables for production
+
+3. **Environment Variables for Production**
+   ```bash
+   REACT_APP_API_URL=https://your-backend-domain.com/api
+   REACT_APP_SOCKET_URL=https://your-backend-domain.com
+   ```
+
+## 🔧 Development
+
+### Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── Header.tsx      # Navigation header
+│   ├── ChatContent.tsx # Chat interface
+│   ├── ExploreContent.tsx # Exploration features
+│   └── ...
+├── services/           # API services
+│   ├── chatService.ts  # Chat functionality
+│   ├── avatarService.ts # Avatar features
+│   └── ...
+├── api.ts             # API configuration
+└── App.tsx           # Main application
+```
+
+### Adding New Features
+
+1. **Create new component** in `src/components/`
+2. **Add API service** in `src/services/` if needed
+3. **Update API endpoints** in `src/api.ts`
+4. **Add routing** in `App.tsx` if needed
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
