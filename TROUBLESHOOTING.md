@@ -110,6 +110,35 @@ If deployment completely fails:
 3. **Check VM health** and restart if necessary
 4. **Verify all services** are running on VM
 
+### VM Connection Timeout - Alternative Approaches
+
+If SSH connection to VM continues to timeout:
+
+1. **Build locally and wait for VM access**:
+   ```bash
+   cd frontend
+   npm ci
+   npm run build
+   ```
+   - Build files will be ready in `build/` folder
+   - Deploy manually when VM is accessible
+
+2. **Use GitHub Actions with retry**:
+   - Push to master branch
+   - GitHub Actions will retry deployment
+   - Set up webhook notifications for deployment status
+
+3. **Alternative deployment platforms**:
+   - Netlify, Vercel, or GitHub Pages for static hosting
+   - Azure Static Web Apps
+   - AWS S3 + CloudFront
+
+4. **Local development server**:
+   ```bash
+   npm start  # For development
+   npx serve -s build  # For testing production build
+   ```
+
 ## Backend Deployment Issues
 
 ### SSH Connection Timeout in Backend Deployment
