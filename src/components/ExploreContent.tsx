@@ -190,7 +190,6 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     
     // Check if we have location and radius from header
     if (!questLocation || !questRadius) {
-      setPlacesError('Please set a location and radius in the header first');
       return;
     }
     
