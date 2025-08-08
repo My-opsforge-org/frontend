@@ -198,32 +198,7 @@ const QuestMap: React.FC<QuestMapProps> = ({
     );
   }
 
-  if (mapError) {
-    return (
-      <Box 
-        sx={{ 
-          width: '100%', 
-          height: '500px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          background: isDarkTheme ? '#1a1a2e' : '#f8fafc',
-          borderRadius: '16px',
-          border: '2px dashed',
-          borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(99, 102, 241, 0.2)',
-        }}
-      >
-        <Box textAlign="center">
-          <Typography variant="h6" sx={{ color: isDarkTheme ? 'white' : 'black', mb: 2 }}>
-            🗺️ Map Error
-          </Typography>
-          <Typography variant="body2" sx={{ color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)', mb: 2 }}>
-            {mapError}
-          </Typography>
-        </Box>
-      </Box>
-    );
-  }
+
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
