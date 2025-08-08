@@ -284,52 +284,7 @@ export default function AvatarChat({ avatar, isDarkTheme, onClose }: AvatarChatP
               </Zoom>
             ))}
             
-            {isTyping && (
-              <Zoom in={true}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-start',
-                    mb: 2,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      p: 2,
-                      borderRadius: 3,
-                      background: isDarkTheme
-                        ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)'
-                        : 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.03) 100%)',
-                      border: isDarkTheme
-                        ? '1px solid rgba(99, 102, 241, 0.2)'
-                        : '1px solid rgba(99, 102, 241, 0.15)',
-                      maxWidth: '80%',
-                    }}
-                  >
-                    <Avatar
-                      src={avatar.image_url}
-                      alt={avatar.name}
-                      sx={{ width: 32, height: 32 }}
-                    />
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <CircularProgress size={16} sx={{ color: '#6366f1' }} />
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        {avatar.name} is thinking...
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Zoom>
-            )}
+
             
             {error && (
               <Zoom in={true}>
