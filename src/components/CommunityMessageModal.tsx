@@ -103,7 +103,7 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
     if (open && communityId) {
       loadMessages();
     }
-  }, [open, communityId]);
+  }, [open, communityId, loadMessages]);
 
   useEffect(() => {
     scrollToBottom();

@@ -532,7 +532,7 @@ export class ChatService {
   // Test chat endpoint accessibility
   static async testChatEndpoint(): Promise<ChatApiResponse<boolean>> {
     try {
-      const response = await fetch(`${API_BASE_URL_chat}/chat/send`, {
+      await fetch(`${API_BASE_URL_chat}/chat/send`, {
         method: 'OPTIONS',
         headers: {
           'Content-Type': 'application/json'

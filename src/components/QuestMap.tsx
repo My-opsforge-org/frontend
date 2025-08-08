@@ -37,7 +37,6 @@ const QuestMap: React.FC<QuestMapProps> = ({
   currentLevel 
 }) => {
   const [selectedSpot, setSelectedSpot] = useState<QuestSpot | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   // Check if Google Maps API is loaded
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);

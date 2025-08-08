@@ -214,7 +214,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     } else {
       setError('Geolocation is not supported by this browser');
     }
-  }, []);
+  }, [address, geocodeResult, places.length]);
 
   const handleLevelStart = async (level: GameLevel) => {
     

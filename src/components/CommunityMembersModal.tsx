@@ -42,7 +42,7 @@ const CommunityMembersModal: React.FC<CommunityMembersModalProps> = ({
     if (open && communityId) {
       fetchMembers();
     }
-  }, [open, communityId]);
+  }, [open, communityId, fetchMembers]);
 
   const fetchMembers = async () => {
     setLoading(true);
