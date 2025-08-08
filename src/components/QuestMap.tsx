@@ -148,11 +148,11 @@ const QuestMap: React.FC<QuestMapProps> = ({
   };
 
   const onLoad = (map: google.maps.Map) => {
-    setMap(map);
+    // Map loaded successfully
   };
 
   const onUnmount = () => {
-    setMap(null);
+    // Map unmounted
   };
 
   const handleMarkerClick = (spot: QuestSpot) => {
