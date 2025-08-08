@@ -36,8 +36,8 @@ jobs:
         working-directory: ./
         env:
           # Backend Server Configuration (for cross-server communication)
-          # REACT_APP_BASE_URL: ${{ secrets.BASE_URL || 'http://4.206.189.155:5002/' }}
-          REACT_APP_BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://4.206.189.155:5002' }}
+          # REACT_APP_BASE_URL: ${{ secrets.BASE_URL || 'http://4.206.104.171:5002/' }}
+          REACT_APP_BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://4.206.104.171:5002' }}
           
           # Client Configuration
           REACT_APP_CLIENT_URL: ${{ secrets.FRONTEND_URL || 'http://localhost:3000' }}
