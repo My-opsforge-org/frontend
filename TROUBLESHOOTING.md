@@ -109,3 +109,38 @@ If deployment completely fails:
 2. **Manual deployment** using the steps above
 3. **Check VM health** and restart if necessary
 4. **Verify all services** are running on VM
+
+## Backend Deployment Issues
+
+### SSH Connection Timeout in Backend Deployment
+
+If you encounter SSH connection timeouts during backend deployment:
+
+1. **Test SSH connection manually**:
+   ```bash
+   cd Backend_node
+   export VM_PUBLIC_IP=your-vm-ip
+   export VM_USERNAME=your-username
+   export VM_PASSWORD=your-password
+   ./test-ssh-connection.sh
+   ```
+
+2. **Check VM status** in your cloud provider dashboard
+
+3. **Verify SSH service** is running on VM:
+   ```bash
+   ssh username@your-vm-ip "sudo systemctl status ssh"
+   ```
+
+4. **Check firewall settings**:
+   ```bash
+   ssh username@your-vm-ip "sudo ufw status"
+   ```
+
+### Backend Deployment Script Improvements
+
+The backend deployment script now includes:
+- SSH connection testing before deployment
+- Better timeout handling (30-second connection timeout)
+- Keep-alive settings to prevent connection drops
+- Comprehensive error messages and troubleshooting tips
