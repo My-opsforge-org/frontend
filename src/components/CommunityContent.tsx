@@ -1,4 +1,4 @@
-import { Box, Typography, Button, CircularProgress, TextField, Paper, List } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, TextField, Paper, List, Snackbar, Alert } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api';
 import FAB from './FAB';
@@ -43,7 +43,7 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
   const [creatingPost, setCreatingPost] = useState(false);
   const [postImages, setPostImages] = useState(''); // comma-separated URLs
   const [actionLoading, setActionLoading] = useState<number | null>(null); // community id for which join/leave is loading
-  const [fabOpen, setFabOpen] = useState(false);
+  const [communityModalOpen, setCommunityModalOpen] = useState(false);
   const [openMembersModal, setOpenMembersModal] = useState(false);
   const [selectedCommunityForMembers, setSelectedCommunityForMembers] = useState<Community | null>(null);
   const [newCommunityName, setNewCommunityName] = useState('');
@@ -51,6 +51,8 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
   const [newCommunityImage, setNewCommunityImage] = useState('');
   const [creatingCommunity, setCreatingCommunity] = useState(false);
   const [communityError, setCommunityError] = useState('');
+  const [editingCommunityId, setEditingCommunityId] = useState<number | null>(null);
+  const [snackbar, setSnackbar] = useState<{open: boolean; message: string; severity: 'success' | 'error'}>({ open: false, message: '', severity: 'success' });
   const navigate = useNavigate();
 
   // Fetch user profile
@@ -121,11 +123,11 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
 
   // Prefill community image with Picsum when opening create dialog
   useEffect(() => {
-    if (fabOpen) {
+    if (communityModalOpen && !editingCommunityId && !newCommunityImage) {
       const seed = Math.floor(Math.random() * 100000);
       setNewCommunityImage(`https://picsum.photos/seed/new-community-${seed}/256`);
     }
-  }, [fabOpen]);
+  }, [communityModalOpen, editingCommunityId, newCommunityImage]);
 
   // Fetch posts for selected community
   const fetchPosts = async (community: Community) => {
@@ -169,6 +171,50 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
     setSelectedCommunity(community);
     fetchPosts(community);
   };
+
+  // Handle edit/delete events coming from CommunityPosts menu
+  React.useEffect(() => {
+    const handleEdit = (e: any) => {
+      const { id, name, description, image_url } = e.detail || {};
+      setNewCommunityName(name || '');
+      setNewCommunityDesc(description || '');
+      setNewCommunityImage(image_url || '');
+      setEditingCommunityId(id || null);
+      setCommunityModalOpen(true);
+    };
+    const handleDelete = async (e: any) => {
+      const { id } = e.detail || {};
+      if (!id) return;
+      const token = localStorage.getItem('access_token');
+      try {
+        const res = await fetch(`${API_BASE_URL}/communities/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          // Remove from list
+          setCommunities(prev => prev.filter(c => c.id !== id));
+          if (selectedCommunity && selectedCommunity.id === id) {
+            setSelectedCommunity(null);
+          }
+          if (editingCommunityId === id) {
+            setEditingCommunityId(null);
+            setCommunityModalOpen(false);
+          }
+          setSnackbar({ open: true, message: 'Community deleted', severity: 'success' });
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setSnackbar({ open: true, message: data.error || 'Failed to delete community', severity: 'error' });
+        }
+      } catch {}
+    };
+    window.addEventListener('community:requestEdit', handleEdit as any);
+    window.addEventListener('community:requestDelete', handleDelete as any);
+    return () => {
+      window.removeEventListener('community:requestEdit', handleEdit as any);
+      window.removeEventListener('community:requestDelete', handleDelete as any);
+    };
+  }, [selectedCommunity, editingCommunityId]);
 
   // Handle view members
   const handleViewMembers = (community: Community) => {
@@ -220,15 +266,18 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
     setCreatingPost(false);
   };
 
-  // Handle create community
+  // Handle create or update community
   const handleCreateCommunity = async (e: React.FormEvent) => {
     e.preventDefault();
     setCommunityError('');
     setCreatingCommunity(true);
     const token = localStorage.getItem('access_token');
     try {
-      const res = await fetch(`${API_BASE_URL}/communities`, {
-        method: 'POST',
+      const isEditing = !!editingCommunityId;
+      const url = isEditing ? `${API_BASE_URL}/communities/${editingCommunityId}` : `${API_BASE_URL}/communities`;
+      const method = isEditing ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -241,13 +290,22 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
       });
       const data = await res.json();
       if (res.ok) {
-        // Add the new community to the list
-        const newCommunity = { ...data.community, image_url: newCommunityImage };
-        setCommunities(prev => [newCommunity, ...prev]);
-        setFabOpen(false);
+        if (method === 'POST') {
+          const newCommunity = { ...data.community, image_url: newCommunityImage };
+          setCommunities(prev => [newCommunity, ...prev]);
+        } else {
+          // Update existing in list
+          const updated = data.community || { id: editingCommunityId, name: newCommunityName, description: newCommunityDesc, image_url: newCommunityImage };
+          setCommunities(prev => prev.map(c => c.id === editingCommunityId ? { ...c, ...updated } : c));
+          if (selectedCommunity && selectedCommunity.id === editingCommunityId) {
+            setSelectedCommunity({ ...selectedCommunity, ...updated });
+          }
+        }
+        setCommunityModalOpen(false);
         setNewCommunityName('');
         setNewCommunityDesc('');
         setNewCommunityImage('');
+        setEditingCommunityId(null);
       } else {
         setCommunityError(data.error || 'Failed to create community');
       }
@@ -272,7 +330,7 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
   }
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="stretch" justifyContent="flex-start" width="100%" height="100%" minHeight="100vh" bgcolor={isDarkTheme ? '#222' : '#fafafa'}>
+    <Box display="flex" flexDirection="column" alignItems="stretch" justifyContent="flex-start" width="100%" height="100%" minHeight="100vh" bgcolor={isDarkTheme ? '#222' : '#fafafa'} sx={{ pb: '100px' }}>
       {!selectedCommunity ? (
         <>
           {/* Header */}
@@ -318,7 +376,7 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
             </Typography>
           </Box>
           <Paper sx={{ width: '100%', height: '100%', flex: 1, display: 'flex', flexDirection: 'column', p: 0, m: 0, boxShadow: 'none', borderRadius: 0 }}>
-            <List sx={{ width: '100%', flex: 1, overflow: 'auto', p: 0, paddingBottom: '64px' }}>
+            <List sx={{ width: '100%', flex: 1, overflow: 'auto', p: 0, paddingBottom: '100px' }}>
               {filteredCommunities.length === 0 ? (
                 <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
                   {searchQuery ? `No communities found matching "${searchQuery}".` : 'No communities found.'}
@@ -353,11 +411,21 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
           onBack={() => setSelectedCommunity(null)}
           postImages={postImages}
           setPostImages={setPostImages}
+          onPostDeleted={(postId: number) => setPosts(prev => prev.filter(p => p.id !== postId))}
         />
       )}
       {/* FAB for creating a new community */}
       {!selectedCommunity && (
-        <FAB isDarkTheme={isDarkTheme} onClick={() => setFabOpen(true)} />
+        <FAB 
+          isDarkTheme={isDarkTheme} 
+          onClick={() => {
+            setEditingCommunityId(null);
+            setNewCommunityName('');
+            setNewCommunityDesc('');
+            setNewCommunityImage('');
+            setCommunityModalOpen(true);
+          }} 
+        />
       )}
       
       {/* Community Members Modal */}
@@ -374,8 +442,8 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
         />
       )}
       
-      <Dialog open={fabOpen} onClose={() => setFabOpen(false)}>
-        <DialogTitle>Create Community</DialogTitle>
+      <Dialog open={communityModalOpen} onClose={() => { setCommunityModalOpen(false); setEditingCommunityId(null); }}>
+        <DialogTitle>{editingCommunityId ? 'Edit Community' : 'Create Community'}</DialogTitle>
         <form onSubmit={handleCreateCommunity}>
           <DialogContent>
             <TextField
@@ -407,54 +475,23 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
             {communityError && <Typography color="error" sx={{ mt: 1 }}>{communityError}</Typography>}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setFabOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setCommunityModalOpen(false); setEditingCommunityId(null); }}>Cancel</Button>
             <Button type="submit" variant="contained" color="primary" disabled={creatingCommunity}>
-              {creatingCommunity ? 'Creating...' : 'Create'}
+              {creatingCommunity ? (editingCommunityId ? 'Saving...' : 'Creating...') : (editingCommunityId ? 'Save' : 'Create')}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
-      {/* Add image URLs field to the post creation modal */}
-      <Dialog open={!!selectedCommunity?.is_member && fabOpen} onClose={() => setFabOpen(false)}>
-        <DialogTitle>Create a Post in {selectedCommunity?.name}</DialogTitle>
-        <form onSubmit={handleCreatePost}>
-          <DialogContent>
-            <TextField
-              label="Title"
-              value={postTitle}
-              onChange={e => setPostTitle(e.target.value)}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Content"
-              value={postContent}
-              onChange={e => setPostContent(e.target.value)}
-              fullWidth
-              margin="normal"
-              multiline
-              minRows={2}
-              required
-            />
-            <TextField
-              label="Image URLs (comma separated)"
-              value={postImages}
-              onChange={e => setPostImages(e.target.value)}
-              fullWidth
-              margin="normal"
-              placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
-            />
-            {postError && <Typography color="error">{postError}</Typography>}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setFabOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary" disabled={creatingPost}>
-              {creatingPost ? 'Posting...' : 'Post'}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 } 

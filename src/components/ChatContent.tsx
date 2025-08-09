@@ -122,8 +122,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
   // Initialize Socket.IO connection when component mounts
   useEffect(() => {
     ChatService.initializeSocket();
-
-    // Listen for real-time messages globally (for all conversations)
+    
+          // Listen for real-time messages globally (for all conversations)
     const unsubscribeGlobal = ChatService.onReceiveMessage((nodeMessage) => {
         console.log('Received message via Socket.IO:', nodeMessage);
         const currentUserId = ChatService.getCurrentUserId();
@@ -182,7 +182,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           
           return prev;
         });
-    });
+      });
 
     // Initialize CommunityChatService socket and listen for community messages
     CommunityChatService.initializeSocket();
