@@ -39,7 +39,15 @@ REACT_APP_ENABLE_COMMUNITY_CHAT=true
 
 # External Services
 REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyDMOv3ucij8PQPtVLPvFZ88arhaRfl0lEA
-REACT_APP_GOOGLE_PLACES_API_KEY=AIzaSyDMOv3ucij8PQPtVLPvFZ88arhaRfl0lEA
+REACT_APP_GOOGLE_PLACES_API_KEY=AIzaSyDMOv3ucij8PQPtVLPvFZ88arhaRfl0L0
+
+# Firebase Configuration
+REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id
 EOF
 
 echo "✅ Frontend .env file created successfully!"
@@ -51,6 +59,7 @@ echo "1. Run: npm run build"
 echo "2. Deploy the new build to your frontend VM"
 echo ""
 echo "Or run: git add . && git commit -m 'Fix API endpoints' && git push origin master"
+
 
 
 

@@ -9,6 +9,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import FirebaseLogin from './FirebaseLogin';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useThemeToggle();
+
+  const handleFirebaseLoginSuccess = (token: string, user: any) => {
+    localStorage.setItem('access_token', token);
+    navigate('/');
+  };
+
+  const handleFirebaseLoginError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,6 +272,17 @@ export default function Login() {
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
+
+          <Divider sx={{ my: 3, opacity: 0.3 }}>
+            <Typography variant="body2" color="text.secondary">or</Typography>
+          </Divider>
+
+          <Box sx={{ mb: 3 }}>
+            <FirebaseLogin 
+              onLoginSuccess={handleFirebaseLoginSuccess}
+              onLoginError={handleFirebaseLoginError}
+            />
+          </Box>
 
           <Divider sx={{ my: 3, opacity: 0.3 }}>
             <Typography variant="body2" color="text.secondary">or</Typography>

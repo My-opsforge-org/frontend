@@ -60,12 +60,33 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
       try {
         const token = localStorage.getItem('access_token');
         if (!token) return;
+        
+        // Get current user's profile first
+        const currentUserRes = await fetch(`${API_BASE_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (!currentUserRes.ok) {
+          setUsers([]);
+          return;
+        }
+        
+        const currentUser = await currentUserRes.json();
+        const currentUserId = currentUser.id;
+        
+        // Get all users
         const res = await fetch(`${API_BASE_URL}/users?per_page=1000`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok && Array.isArray(data.users)) setUsers(data.users);
-        else setUsers([]);
+        
+        if (res.ok && Array.isArray(data.users)) {
+          // Filter out the current user
+          const filteredUsers = data.users.filter((user: ExtendedUser) => user.id !== currentUserId);
+          setUsers(filteredUsers);
+        } else {
+          setUsers([]);
+        }
       } catch {
         setUsers([]);
       } finally {
