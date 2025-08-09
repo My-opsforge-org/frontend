@@ -64,6 +64,19 @@ export default function AvatarsContent({ isDarkTheme, searchQuery = '' }: Avatar
     fetchAvatars();
   }, []);
 
+  // If coming from HomeGrid with a specific companion, auto-open chat
+  useEffect(() => {
+    const targetName = localStorage.getItem('startAvatarChatName');
+    if (targetName && avatars.length > 0) {
+      const target = avatars.find(a => a.name === targetName);
+      if (target) {
+        setSelectedAvatar(target);
+        setChatOpen(true);
+      }
+      localStorage.removeItem('startAvatarChatName');
+    }
+  }, [avatars]);
+
   // Filter avatars based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {

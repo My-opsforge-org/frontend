@@ -47,7 +47,12 @@ export class CommunityChatService {
     }
 
     try {
-      this.socket = io('http://localhost:5002', {
+      // Get backend URL from environment variable or default to backend IP
+      const backendUrl = process.env.REACT_APP_BASE_URL?.replace('/api', '') || 
+                        process.env.REACT_APP_BACKEND_URL || 
+                        'http://4.206.104.171:5002';
+      
+      this.socket = io(backendUrl, {
         auth: {
           token: token
         },

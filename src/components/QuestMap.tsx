@@ -55,8 +55,8 @@ const QuestMap: React.FC<QuestMapProps> = ({
 
   const mapContainerStyle = {
     width: '100%',
-    height: '500px',
-    borderRadius: '16px',
+    height: '380px',
+    borderRadius: '12px',
   };
 
   const mapOptions = {
@@ -175,12 +175,12 @@ const QuestMap: React.FC<QuestMapProps> = ({
       <Box 
         sx={{ 
           width: '100%', 
-          height: '500px', 
+          height: '380px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
           background: isDarkTheme ? '#1a1a2e' : '#f8fafc',
-          borderRadius: '16px',
+          borderRadius: '12px',
           border: '2px dashed',
           borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(99, 102, 241, 0.2)',
         }}

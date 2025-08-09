@@ -6,9 +6,12 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
-import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider, Paper, InputAdornment, Slider } from '@mui/material';
-import React, { useState } from 'react';
+import ExploreIcon from '@mui/icons-material/Explore';
+import StarIcon from '@mui/icons-material/Star';
+import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider, Paper, InputAdornment, Slider, LinearProgress } from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
 import { API_BASE_URL } from '../api';
+import { useUserProgress } from '../contexts/UserProgressContext';
 
 export default function Header({ name, profileImage, isDarkTheme, showOptions, setShowOptions, toggleTheme, handleLogout, profileData, activeTab, setActiveTab, onProfileUpdate, searchQuery, setSearchQuery, onLocationChange, onRadiusChange }: any) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -20,10 +23,21 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [locationQuery, setLocationQuery] = useState('');
   const [radiusValue, setRadiusValue] = useState(5);
+  const { userProgress, refreshUserProgress, loading: progressLoading } = useUserProgress();
+
+
 
   React.useEffect(() => {
     setEditProfile(profileData || {});
   }, [profileData]);
+
+  // Refresh user progress when tab changes to home (after exploring)
+  useEffect(() => {
+    if (activeTab === 'home') {
+      console.log('Refreshing user progress due to tab change to home');
+      refreshUserProgress();
+    }
+  }, [activeTab, refreshUserProgress]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -53,26 +67,18 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
         width: '100%',
         left: 0,
         background: isDarkTheme
-          ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-          : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)',
-        borderRadius: '0 0 24px 24px',
+          ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%)'
+          : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 30%, #e2e8f0 70%, #ffffff 100%)',
+        borderRadius: '0 0 32px 32px',
         zIndex: 1200,
-        overflowX: 'hidden',
+          overflow: 'hidden',
         boxShadow: isDarkTheme
-          ? '0 8px 32px rgba(0, 0, 0, 0.4)'
-          : '0 8px 32px rgba(0, 0, 0, 0.1)',
+          ? '0 12px 40px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(99, 102, 241, 0.3)'
+          : '0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(99, 102, 241, 0.2)',
         border: isDarkTheme
-          ? '1px solid rgba(255, 255, 255, 0.1)'
-          : '1px solid rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(20px)',
-      }}
-    >
-      <Toolbar sx={{ 
-        minHeight: 80, 
-        px: 3, 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
+          ? '1px solid rgba(255, 255, 255, 0.15)'
+          : '1px solid rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(25px)',
         position: 'relative',
         '&::before': {
           content: '""',
@@ -82,10 +88,39 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
           right: 0,
           bottom: 0,
           background: isDarkTheme
-            ? 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)'
-            : 'radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)',
+            ? 'linear-gradient(45deg, rgba(99, 102, 241, 0.1) 0%, transparent 50%, rgba(168, 85, 247, 0.1) 100%)'
+            : 'linear-gradient(45deg, rgba(99, 102, 241, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.05) 100%)',
           pointerEvents: 'none',
-        }
+          opacity: 0.8,
+        },
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: isDarkTheme
+            ? 'radial-gradient(circle at 30% 60%, rgba(34, 197, 94, 0.1) 0%, transparent 40%)'
+            : 'radial-gradient(circle at 70% 40%, rgba(34, 197, 94, 0.05) 0%, transparent 40%)',
+          pointerEvents: 'none',
+          animation: 'pulse 4s ease-in-out infinite',
+        },
+        '@keyframes pulse': {
+          '0%, 100%': { opacity: 0.6 },
+          '50%': { opacity: 1 },
+        },
+      }}
+    >
+      <Toolbar sx={{ 
+        minHeight: 90, 
+        px: 4, 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        position: 'relative',
+        zIndex: 2,
+        overflow: 'hidden',
       }}>
         <Tooltip title="View Profile" arrow>
           <Box 
@@ -152,15 +187,233 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
                   fontWeight: 500
                 }}
               >
-                Welcome back!
+                {userProgress ? (
+                  userProgress.totalXP >= 500 ? "🌟 Legendary Wanderer" :
+                  userProgress.totalXP >= 388 ? "🗺️ World Traveler" :
+                  userProgress.totalXP >= 291 ? "🏔️ Adventure Seeker" :
+                  userProgress.totalXP >= 194 ? "🌍 Discovery Pioneer" :
+                  userProgress.totalXP >= 97 ? "🗺️ Pathfinder" :
+                  "🚀 New Explorer"
+                ) : "Ready to explore!"}
               </Typography>
             </Box>
           </Box>
         </Tooltip>
+
+        {/* User Progress Display - Only on wide screens and home tab */}
+        {activeTab === 'home' && (
+          <Tooltip title="Click to explore and discover more places!" arrow>
+            <Box
+              sx={{
+                display: { xs: 'none', md: 'flex' },
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: { md: 3, lg: 4, xl: 5 },
+                position: 'absolute',
+                left: { md: '45%', lg: '50%' },
+                transform: 'translateX(-50%)',
+                maxWidth: { md: 600, lg: 700, xl: 800 },
+                px: { md: 4, lg: 5, xl: 6 },
+                py: { md: 2.5, lg: 3, xl: 3.5 },
+                borderRadius: 4,
+                background: isDarkTheme
+                  ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(26, 26, 46, 0.8) 50%, rgba(0, 0, 0, 0.6) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 50%, rgba(255, 255, 255, 0.9) 100%)',
+                border: '1px solid',
+                borderColor: isDarkTheme
+                  ? 'rgba(255, 255, 255, 0.2)'
+                  : 'rgba(99, 102, 241, 0.4)',
+                backdropFilter: 'blur(20px)',
+                cursor: 'pointer',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: isDarkTheme
+                  ? '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                  : '0 8px 32px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                '&:hover': {
+                  background: isDarkTheme
+                    ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0.3) 50%, rgba(99, 102, 241, 0.3) 100%)'
+                    : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 50%, rgba(99, 102, 241, 0.15) 100%)',
+                  transform: 'translateX(-50%) translateY(-4px) scale(1.02)',
+                  boxShadow: isDarkTheme
+                    ? '0 16px 48px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                    : '0 16px 48px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                  borderColor: isDarkTheme
+                    ? 'rgba(99, 102, 241, 0.6)'
+                    : 'rgba(99, 102, 241, 0.6)',
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: 4,
+                  background: isDarkTheme
+                    ? 'linear-gradient(45deg, rgba(99, 102, 241, 0.1) 0%, transparent 50%, rgba(168, 85, 247, 0.1) 100%)'
+                    : 'linear-gradient(45deg, rgba(99, 102, 241, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.05) 100%)',
+                  opacity: 0,
+                  transition: 'opacity 0.4s ease',
+                  pointerEvents: 'none',
+                },
+                '&:hover::before': {
+                  opacity: 1,
+                }
+              }}
+              onClick={() => setActiveTab('explore')}
+            >
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                }
+              }}>
+                <Box sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                  boxShadow: '0 4px 12px rgba(251, 191, 36, 0.3)',
+                  animation: 'rotate 3s linear infinite',
+                  '@keyframes rotate': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' },
+                  },
+                }}>
+                  <StarIcon sx={{ 
+                    color: '#ffffff',
+                    fontSize: 18,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }} />
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 700,
+                    color: isDarkTheme ? '#ffffff' : '#1f2937',
+                    minWidth: 'fit-content',
+                    textShadow: isDarkTheme ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  Level {userProgress?.level || 1}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                }
+              }}>
+                <Box sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  animation: 'pulse 2s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.1)' },
+                  },
+                }}>
+                  <ExploreIcon sx={{ 
+                    color: '#ffffff',
+                    fontSize: 16,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }} />
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 600,
+                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                    minWidth: 'fit-content',
+                    textShadow: isDarkTheme ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  {userProgress?.placesDiscovered || 0} places
+                </Typography>
+              </Box>
+
+              {/* Total XP Display (matches explore section) */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                }
+              }}>
+                <Box sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                  animation: 'glow 2.5s ease-in-out infinite alternate',
+                  '@keyframes glow': {
+                    '0%': { boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' },
+                    '100%': { boxShadow: '0 4px 20px rgba(99, 102, 241, 0.6)' },
+                  },
+                }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      fontSize: '10px',
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))'
+                    }}
+                  >
+                    XP
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 700,
+                    color: isDarkTheme ? '#ffffff' : '#1f2937',
+                    minWidth: 'fit-content',
+                    textShadow: isDarkTheme ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  {userProgress?.totalXP || 0}
+                </Typography>
+              </Box>
+            </Box>
+          </Tooltip>
+        )}
         
         {/* Location Field for Explore Tab */}
         {activeTab === 'explore' ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, mx: 2, gap: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            flex: 1, 
+            mx: { xs: 1, sm: 2 }, 
+            gap: { xs: 1, sm: 1.5, md: 2 },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+          }}>
             <TextField
               placeholder="Enter location..."
               value={locationQuery}
@@ -216,10 +469,11 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1,
-              minWidth: 250,
-              px: 4,
-              py: 1,
+              gap: { xs: 0.5, sm: 1 },
+              minWidth: { xs: 140, sm: 180, md: 250 },
+              flexShrink: 1,
+              px: { xs: 1.5, sm: 2, md: 4 },
+              py: { xs: 0.5, sm: 1 },
               borderRadius: 3,
               background: isDarkTheme 
                 ? 'rgba(255, 255, 255, 0.1)' 
@@ -231,7 +485,7 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
             }}>
               <MyLocationIcon sx={{ 
                 color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
-                fontSize: 18
+                fontSize: { xs: 16, sm: 18 }
               }} />
               <Slider
                 value={radiusValue}
@@ -265,7 +519,7 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
                 sx={{ 
                   color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(99, 102, 241, 0.8)',
                   fontWeight: 600,
-                  minWidth: 25,
+                  minWidth: { xs: 22, sm: 25 },
                   textAlign: 'center'
                 }}
               >
@@ -284,7 +538,7 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
             sx={{
               ml: 'auto',
               mr: 2,
-              width: 200,
+              width: { lg: 180, xl: 200 },
               cursor: 'pointer',
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,

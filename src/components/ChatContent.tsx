@@ -122,9 +122,9 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
   // Initialize Socket.IO connection when component mounts
   useEffect(() => {
     ChatService.initializeSocket();
-    
-          // Listen for real-time messages globally (for all conversations)
-      ChatService.onReceiveMessage((nodeMessage) => {
+
+    // Listen for real-time messages globally (for all conversations)
+    const unsubscribeGlobal = ChatService.onReceiveMessage((nodeMessage) => {
         console.log('Received message via Socket.IO:', nodeMessage);
         const currentUserId = ChatService.getCurrentUserId();
         
@@ -182,7 +182,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           
           return prev;
         });
-      });
+    });
 
     // Initialize CommunityChatService socket and listen for community messages
     CommunityChatService.initializeSocket();
@@ -244,6 +244,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
 
     // Cleanup function
     return () => {
+      try { unsubscribeGlobal(); } catch (_) {}
       CommunityChatService.unsubscribeFromCommunityMessages(handleCommunityMessage);
     };
   }, [users, communityMessageModalOpen, selectedCommunity]);
@@ -325,12 +326,11 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       };
       
       // Add listener for selected user messages
-      ChatService.onReceiveMessage(handleSelectedUserMessage);
+      const unsubscribeSelected = ChatService.onReceiveMessage(handleSelectedUserMessage);
       
       // Cleanup function to remove listener when selectedUser changes
       return () => {
-        // Note: Socket.IO doesn't have a direct way to remove specific listeners
-        // The global listener will handle all messages, so this is mainly for organization
+        try { unsubscribeSelected(); } catch (_) {}
       };
     }
   }, [selectedUser]);
@@ -570,11 +570,8 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
       try {
         const response = await ChatService.sendMessage(selectedUser.id, newMessage.trim());
         
-        // Also send via Socket.IO for real-time delivery
-        const currentUserId = ChatService.getCurrentUserId();
-        if (currentUserId) {
-          ChatService.sendMessageRealtime(currentUserId, selectedUser.id, newMessage.trim());
-        }
+        // Note: HTTP send already persists and server emits realtime to receiver.
+        // Avoid duplicate insertion by not emitting socket message from client.
         
         if (response.success && response.data) {
           // Add the message immediately from HTTP API response

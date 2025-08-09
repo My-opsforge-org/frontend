@@ -132,22 +132,21 @@ export class ChatService {
     }
   }
 
-  // Listen for incoming messages
-  static onReceiveMessage(callback: (message: NodeMessage) => void): void {
+  // Listen for incoming messages (canonical: 'private_message').
+  // Returns an unsubscribe function to remove the specific listener.
+  static onReceiveMessage(callback: (message: NodeMessage) => void): () => void {
     const socket = this.getSocket();
     if (socket) {
-      socket.on('receive_message', (message: NodeMessage) => {
-        callback(message);
-      });
-      
-      socket.on('private_message', (message: NodeMessage) => {
-        callback(message);
-      });
-      
-      socket.on('receive_private_message', (message: NodeMessage) => {
-        callback(message);
-      });
+      socket.on('private_message', callback);
+      return () => {
+        try {
+          socket.off('private_message', callback);
+        } catch (_) {
+          // noop
+        }
+      };
     }
+    return () => {};
   }
 
   // Send message via Socket.IO (in addition to HTTP)

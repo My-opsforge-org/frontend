@@ -20,7 +20,7 @@ import ExploreIcon from '@mui/icons-material/Explore';
 
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api';
-import userProgressService, { UserProgress } from '../services/userProgressService';
+import { useUserProgress } from '../contexts/UserProgressContext';
 import QuestMap from './QuestMap';
 
 interface GameLevel {
@@ -42,7 +42,19 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
 }) {
   const [places, setPlaces] = useState<any[]>([]);
   const [currentLevel, setCurrentLevel] = useState<GameLevel | null>(null);
-  const [gameProgress, setGameProgress] = useState<UserProgress>({
+  const [gameProgress, setGameProgress] = useState<{
+    id: number;
+    userId: number;
+    level: number;
+    totalXP: number;
+    placesDiscovered: number;
+    touristTrail: number;
+    foodExplorer: number;
+    culturalQuest: number;
+    natureWanderer: number;
+    entertainmentHunter: number;
+    lastPlayedAt: string;
+  }>({
     id: 0,
     userId: 0,
     level: 1,
@@ -62,6 +74,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [visitedSpots, setVisitedSpots] = useState<Set<string>>(new Set());
   const [xpNotification, setXpNotification] = useState<{xp: number, message: string} | null>(null);
+  const { userProgress, refreshUserProgress, updateUserProgress } = useUserProgress();
 
 
 
@@ -168,8 +181,9 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
     const loadUserProgress = async () => {
       try {
         setProgressLoading(true);
-        const progress = await userProgressService.getUserProgress();
-        setGameProgress(progress);
+        if (userProgress) {
+          setGameProgress(userProgress);
+        }
       } catch (error) {
         console.error('Error loading user progress:', error);
         // Continue with default progress
@@ -178,8 +192,22 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
       }
     };
 
-    loadUserProgress();
-  }, []);
+    if (userProgress) {
+      loadUserProgress();
+    }
+  }, [userProgress]);
+
+  // Calculate level based on XP
+  const calculateLevel = (totalXP: number): number => {
+    if (totalXP >= 500) return 5;
+    if (totalXP >= 388) return 4;
+    if (totalXP >= 291) return 3;
+    if (totalXP >= 194) return 2;
+    if (totalXP >= 97) return 1;
+    return 1;
+  };
+
+
 
 
 
@@ -285,14 +313,14 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
       // Check if quest is already completed
       if (currentLevel.currentProgress >= currentLevel.requiredPlaces) {
         // Quest is already completed, only increment places discovered
-        setGameProgress(prev => ({
+        setGameProgress((prev: any) => ({
           ...prev,
           placesDiscovered: prev.placesDiscovered + 1
         }));
         
         // Update only places discovered in backend
         try {
-          await userProgressService.updateUserProgress({
+          await updateUserProgress({
             placesDiscovered: gameProgress.placesDiscovered + 1
           });
         } catch (error) {
@@ -306,7 +334,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
       
       // Update UI immediately for better user experience
       setCurrentLevel({ ...currentLevel, currentProgress: newProgress });
-      setGameProgress(prev => {
+      setGameProgress((prev: any) => {
         const updated: any = {
           ...prev,
           totalXP: prev.totalXP + visitXP,
@@ -371,7 +399,13 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           default:
             break;
         }
-        await userProgressService.updateUserProgress(update);
+        await updateUserProgress(update);
+        
+        // Calculate and save new level if it increased
+        const newLevel = calculateLevel(gameProgress.totalXP + visitXP);
+        if (newLevel > gameProgress.level) {
+          await updateUserProgress({ level: newLevel });
+        }
         
       } catch (error) {
         console.error('Error updating quest progress:', error);
@@ -392,19 +426,18 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
 
   if (progressLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box display="flex" justifyContent="center" alignItems="center" sx={{ minHeight: { xs: '70vh', md: '60vh' }, overflow: 'hidden' }}>
         <CircularProgress sx={{ color: '#6366f1' }} />
       </Box>
     );
   }
 
   return (
-    <Box 
+      <Box 
       display="flex" 
       flexDirection="column" 
       justifyContent="flex-start" 
       alignItems="center" 
-      minHeight="100vh" 
       width="100%" 
       sx={{ 
         bgcolor: isDarkTheme ? '#222' : '#fafafa',
@@ -412,7 +445,10 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
           : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
         position: 'relative',
-        pb: '100px', // Add bottom padding to account for BottomNav
+          // Ensure content is visible above BottomNav without forcing full viewport height
+          pb: '100px',
+          overflowX: 'hidden',
+          overflowY: 'hidden',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -431,7 +467,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
       <Box
         sx={{
           width: '100%',
-          p: 3,
+          p: 2,
           background: isDarkTheme
             ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 35, 0.98) 100%)'
             : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%)',
@@ -449,18 +485,19 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
             fontWeight: 800,
             textAlign: 'center',
             color: isDarkTheme ? 'rgba(255, 255, 255, 0.98)' : 'rgba(31, 41, 55, 0.98)',
-            mb: 2,
+            mb: 1.5,
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
+            fontSize: { xs: '1.25rem', sm: '1.5rem' },
           }}
         >
           🗺️ Explore Quest
         </Typography>
         
         {/* Progress Stats */}
-        <Box display="flex" justifyContent="center" gap={4} mb={3}>
+        <Box display="flex" justifyContent="center" gap={3} mb={2}>
           <Box textAlign="center">
             <Typography variant="h6" sx={{ color: '#6366f1', fontWeight: 700 }}>
               Level {gameProgress.level}
@@ -541,7 +578,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
       )}
 
         {/* Game Levels */}
-        <Box sx={{ p: 3, width: '100%', maxWidth: 1200 }}>
+        <Box sx={{ p: 2, width: '100%', maxWidth: 1100 }}>
           {!questLocation || !questRadius ? (
             <Box sx={{ textAlign: 'center', mb: 3 }}>
               <Typography 
@@ -560,9 +597,10 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
             variant="h5" 
             sx={{ 
               fontWeight: 700, 
-              mb: 3, 
+              mb: 2, 
               textAlign: 'center',
               color: isDarkTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(31, 41, 55, 0.9)',
+              fontSize: { xs: '1rem', sm: '1.15rem' }
             }}
           >
             Choose Your Quest
@@ -572,9 +610,9 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           sx={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
-            gap: 3, 
+            gap: 2, 
             justifyContent: 'center',
-            maxWidth: 1200,
+            maxWidth: 1100,
             mx: 'auto'
           }}
         >
@@ -582,8 +620,8 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
             <Box 
               key={level.id}
               sx={{ 
-                width: { xs: '100%', sm: 'calc(50% - 12px)', md: 'calc(33.333% - 16px)' },
-                minWidth: { sm: 300, md: 280 }
+                width: { xs: '100%', sm: 'calc(50% - 8px)', md: 'calc(33.333% - 12px)' },
+                minWidth: { sm: 260, md: 260 }
               }}
             >
               <Zoom in={true} style={{ transitionDelay: `${level.id * 100}ms` }}>
@@ -603,7 +641,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     cursor: 'pointer',
                     '&:hover': {
-                      transform: 'translateY(-8px)',
+                      transform: 'translateY(-4px)',
                       boxShadow: isDarkTheme
                         ? '0 16px 48px rgba(0, 0, 0, 0.4)'
                         : '0 16px 48px rgba(0, 0, 0, 0.15)',
@@ -611,14 +649,14 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                   }}
                   onClick={() => handleLevelStart(level)}
                 >
-                  <CardContent sx={{ p: 3 }}>
+                  <CardContent sx={{ p: 2 }}>
                     <Box display="flex" alignItems="center" mb={2}>
                       <Avatar
                         sx={{
                           bgcolor: level.completed ? '#10b981' : '#6366f1',
-                          width: 48,
-                          height: 48,
-                          mr: 2,
+                          width: 40,
+                          height: 40,
+                          mr: 1.5,
                         }}
                       >
                         {level.completed ? <EmojiEventsIcon /> : <ExploreIcon />}
@@ -633,7 +671,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                       </Box>
                     </Box>
                     
-                    <Box mb={2}>
+                    <Box mb={1.5}>
                       <Box display="flex" justifyContent="space-between" mb={1}>
                         <Typography variant="body2" sx={{ color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)' }}>
                           Progress
@@ -647,12 +685,12 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                         variant="determinate"
                         value={(level.currentProgress / level.requiredPlaces) * 100}
                         sx={{
-                          height: 8,
-                          borderRadius: 4,
+                          height: 6,
+                          borderRadius: 3,
                           bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.1)',
                           '& .MuiLinearProgress-bar': {
                             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            borderRadius: 4,
+                            borderRadius: 3,
                           }
                         }}
                       />
@@ -702,10 +740,10 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
 
       {/* Current Level Progress */}
       {currentLevel && (
-        <Box sx={{ p: 3, width: '100%', maxWidth: 1200 }}>
+        <Box sx={{ p: 2, width: '100%', maxWidth: 1100 }}>
           <Paper
             sx={{
-              p: 3,
+              p: 2,
               background: isDarkTheme
                 ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(15, 15, 35, 0.95) 100%)'
                 : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%)',
@@ -714,10 +752,10 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
                 ? '1px solid rgba(255, 255, 255, 0.1)'
                 : '1px solid rgba(99, 102, 241, 0.1)',
               borderRadius: 3,
-              mb: 3,
+              mb: 2,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: isDarkTheme ? 'white' : 'black' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: isDarkTheme ? 'white' : 'black' }}>
               🎯 Current Quest: {currentLevel.name}
             </Typography>
             <Typography variant="body2" sx={{ color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)', mb: 2 }}>
@@ -742,12 +780,12 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
               variant="determinate"
               value={(currentLevel.currentProgress / currentLevel.requiredPlaces) * 100}
               sx={{
-                height: 12,
-                borderRadius: 6,
+                height: 8,
+                borderRadius: 4,
                 bgcolor: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.1)',
                 '& .MuiLinearProgress-bar': {
                   background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  borderRadius: 6,
+                  borderRadius: 4,
                   transition: 'transform 0.5s ease-in-out',
                 }
               }}
@@ -759,8 +797,8 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
           {showMap && mapCenter && places.length > 0 && (
             <Paper
               sx={{
-                p: 3,
-                mb: 3,
+                p: 2,
+                mb: 2,
                 background: isDarkTheme
                   ? 'linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(15, 15, 35, 0.95) 100%)'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%)',

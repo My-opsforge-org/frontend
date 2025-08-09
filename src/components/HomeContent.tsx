@@ -1,5 +1,6 @@
 import { Avatar, Box, Card, CardContent, CardHeader, CircularProgress, Typography, IconButton, Tooltip, TextField, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemAvatar, ListItemText, Divider, Button, Chip } from '@mui/material';
 import { useState, useEffect } from 'react';
+import { parseISO, isValid as isValidDate, parse } from 'date-fns';
 import { API_BASE_URL } from '../api';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -15,8 +16,10 @@ interface Post {
   id: number;
   title: string;
   content: string;
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   author?: {
     name?: string;
     avatarUrl?: string;
@@ -269,6 +272,78 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
     }
   };
 
+  const parseDateSafe = (input: unknown): Date | null => {
+    if (!input) return null;
+    try {
+      if (input instanceof Date) {
+        return isValidDate(input) ? input : null;
+      }
+      if (typeof input === 'number') {
+        const d = new Date(input);
+        return isValidDate(d) ? d : null;
+      }
+      if (typeof input === 'string') {
+        const tzlessRegex = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?)$/;
+        const hasTimezone = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(input);
+        if (!hasTimezone && tzlessRegex.test(input)) {
+          // Treat timezone-less backend strings as UTC
+          const isoCandidate = input.replace(' ', 'T') + 'Z';
+          const utcDate = new Date(isoCandidate);
+          if (isValidDate(utcDate)) return utcDate;
+        }
+        // Common ISO formats
+        let d: Date | null = null;
+        try {
+          d = parseISO(input);
+          if (isValidDate(d)) return d;
+        } catch {}
+        // Native parse (without modification)
+        const nativeDirect = new Date(input);
+        if (isValidDate(nativeDirect)) return nativeDirect;
+        // Try space-separated datetime like "yyyy-MM-dd HH:mm:ss"
+        const patterns = [
+          'yyyy-MM-dd HH:mm:ss',
+          'yyyy-MM-dd HH:mm',
+          'yyyy/MM/dd HH:mm:ss',
+          'yyyy/MM/dd HH:mm',
+        ];
+        for (const pattern of patterns) {
+          try {
+            const parsed = parse(input, pattern, new Date());
+            if (isValidDate(parsed)) return parsed;
+          } catch {}
+        }
+        // Last resort: native Date
+        const native = new Date(input.replace(' ', 'T'));
+        if (isValidDate(native)) return native;
+      }
+    } catch {}
+    return null;
+  };
+
+  const formatDateTime = (input: unknown): string => {
+    const d = parseDateSafe(input);
+    if (!d) return '';
+    try {
+      const dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Toronto',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return dtf.format(d);
+    } catch {
+      return '';
+    }
+  };
+
+  const choosePostDate = (post: Post): string | undefined => {
+    return post.created_at || post.createdAt || post.updated_at || post.updatedAt;
+  };
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
@@ -344,24 +419,21 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
                   {post.author?.name || 'User'}
                 </Typography>
               }
-              subheader={
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    opacity: 0.7,
-                    color: isDarkTheme ? '#9ca3af' : '#6b7280',
-                    fontWeight: 500,
-                  }}
-                >
-                  {new Date(post.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </Typography>
-              }
+              subheader={(() => {
+                const text = formatDateTime(choosePostDate(post)) || 'Just now';
+                return (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      opacity: 0.7,
+                      color: isDarkTheme ? '#9ca3af' : '#6b7280',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {text}
+                  </Typography>
+                );
+              })()}
               sx={{
                 pb: 1,
                 '& .MuiCardHeader-content': {
@@ -662,7 +734,7 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
                         secondary={<>
                           <Typography component="span" variant="body2" color="text.primary">{comment.content}</Typography>
                           <br/>
-                          <Typography component="span" variant="caption" color="text.secondary">{new Date(comment.created_at).toLocaleString()}</Typography>
+                          <Typography component="span" variant="caption" color="text.secondary">{formatDateTime((comment as any).created_at || (comment as any).createdAt) || 'Just now'}</Typography>
                         </>}
                       />
                     </ListItem>
@@ -734,4 +806,6 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       </Dialog>
     </Box>
   );
-} 
+}
+
+

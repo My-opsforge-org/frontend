@@ -1,4 +1,4 @@
-import { ListItem, ListItemButton, ListItemText, ListItemSecondaryAction, Button, IconButton, Tooltip, Box } from '@mui/material';
+import { ListItem, ListItemButton, ListItemText, ListItemSecondaryAction, Button, IconButton, Tooltip, Box, Avatar, ListItemAvatar } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import MessageIcon from '@mui/icons-material/Message';
 import React, { useState } from 'react';
@@ -9,6 +9,7 @@ interface Community {
   name: string;
   description: string;
   is_member?: boolean;
+  image_url?: string;
 }
 
 interface CommunityListProps {
@@ -33,6 +34,12 @@ const CommunityList: React.FC<CommunityListProps> = ({
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [selectedCommunityForMessage, setSelectedCommunityForMessage] = useState<Community | null>(null);
 
+  const getCommunityImageUrl = (community: Community) => {
+    if (community.image_url && community.image_url.trim().length > 0) return community.image_url;
+    const seed = community.id?.toString() || encodeURIComponent(community.name);
+    return `https://picsum.photos/seed/community-${seed}/64`;
+  };
+
   const handleMessageClick = (community: Community) => {
     setSelectedCommunityForMessage(community);
     setMessageModalOpen(true);
@@ -51,6 +58,14 @@ const CommunityList: React.FC<CommunityListProps> = ({
           selected={selectedCommunity?.id === community.id}
           onClick={() => handleSelectCommunity(community)}
         >
+          <ListItemAvatar>
+            <Avatar
+              variant="rounded"
+              src={getCommunityImageUrl(community)}
+              alt={community.name}
+              sx={{ width: 40, height: 40, mr: 2, borderRadius: 1 }}
+            />
+          </ListItemAvatar>
           <ListItemText
             primary={community.name}
             secondary={community.description}

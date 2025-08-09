@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import CommunityList from './CommunityList';
 import CommunityPosts from './CommunityPosts';
 import CommunityMembersModal from './CommunityMembersModal';
+import { postEventManager } from '../utils/postEvents';
 
 interface Community {
   id: number;
@@ -17,6 +18,7 @@ interface Community {
   description: string;
   members_details?: any[];
   is_member?: boolean;
+  image_url?: string;
 }
 
 interface Post {
@@ -46,6 +48,7 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
   const [selectedCommunityForMembers, setSelectedCommunityForMembers] = useState<Community | null>(null);
   const [newCommunityName, setNewCommunityName] = useState('');
   const [newCommunityDesc, setNewCommunityDesc] = useState('');
+  const [newCommunityImage, setNewCommunityImage] = useState('');
   const [creatingCommunity, setCreatingCommunity] = useState(false);
   const [communityError, setCommunityError] = useState('');
   const navigate = useNavigate();
@@ -115,6 +118,14 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
     fetchCommunitiesAndJoined();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Prefill community image with Picsum when opening create dialog
+  useEffect(() => {
+    if (fabOpen) {
+      const seed = Math.floor(Math.random() * 100000);
+      setNewCommunityImage(`https://picsum.photos/seed/new-community-${seed}/256`);
+    }
+  }, [fabOpen]);
 
   // Fetch posts for selected community
   const fetchPosts = async (community: Community) => {
@@ -193,6 +204,13 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
         setPostTitle('');
         setPostContent('');
         setPostImages('');
+        
+        // Emit event to notify other components (like HomeContent) about the new post
+        // This ensures the home feed refreshes and shows the new post with images immediately
+        postEventManager.emitPostCreated({
+          post: data,
+          source: 'community'
+        });
       } else {
         setPostError(data.error || 'Failed to create post');
       }
@@ -217,17 +235,19 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
         },
         body: JSON.stringify({ 
           name: newCommunityName, 
-          description: newCommunityDesc 
+          description: newCommunityDesc,
+          image_url: newCommunityImage
         })
       });
       const data = await res.json();
       if (res.ok) {
         // Add the new community to the list
-        const newCommunity = data.community;
+        const newCommunity = { ...data.community, image_url: newCommunityImage };
         setCommunities(prev => [newCommunity, ...prev]);
         setFabOpen(false);
         setNewCommunityName('');
         setNewCommunityDesc('');
+        setNewCommunityImage('');
       } else {
         setCommunityError(data.error || 'Failed to create community');
       }
@@ -375,6 +395,14 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
               multiline
               minRows={2}
               required
+            />
+            <TextField
+              label="Image URL"
+              value={newCommunityImage}
+              onChange={e => setNewCommunityImage(e.target.value)}
+              fullWidth
+              margin="normal"
+              placeholder="https://picsum.photos/seed/your-seed/256"
             />
             {communityError && <Typography color="error" sx={{ mt: 1 }}>{communityError}</Typography>}
           </DialogContent>

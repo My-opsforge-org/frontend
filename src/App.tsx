@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Profile from './components/Profile';
 import Register from './components/Register';
 import { CommunityChatService } from './services/communityChatService';
+import { UserProgressProvider } from './contexts/UserProgressContext';
 
 // Theme context for toggling dark/light mode
 const ThemeToggleContext = createContext({ toggleTheme: () => {}, isDark: true });
@@ -202,15 +203,17 @@ function App() {
     <ThemeToggleContext.Provider value={{ toggleTheme, isDark: isDarkTheme }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/profile" element={<RequireAuth><Profile isDarkTheme={isDarkTheme} /></RequireAuth>} />
-            <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Router>
+        <UserProgressProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/profile" element={<RequireAuth><Profile isDarkTheme={isDarkTheme} /></RequireAuth>} />
+              <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Router>
+        </UserProgressProvider>
       </ThemeProvider>
     </ThemeToggleContext.Provider>
   );
