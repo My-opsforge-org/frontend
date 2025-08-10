@@ -192,14 +192,14 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
   return (
     <Box sx={{ bgcolor: isDark ? '#18191A' : '#fff', minHeight: '100vh', p: 0 }}>
       {/* Header Bar */}
-      <Box display="flex" alignItems="center" width="100%" sx={{ px: 2, py: 2, bgcolor: isDark ? '#23272f' : '#fff', boxShadow: 1, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
+      <Box display="flex" alignItems="center" width="100%" sx={{ px: { xs: 2, md: 4, lg: 6 }, py: 2, bgcolor: isDark ? '#23272f' : '#fff', boxShadow: 1, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
         <IconButton onClick={handleBack} sx={{ mr: 1, bgcolor: 'transparent', boxShadow: 0, '&:hover': { bgcolor: isDark ? '#23272f' : '#f5f5f5' } }}>
           <ArrowBackIcon sx={{ color: isDark ? '#fafafa' : 'black', fontSize: 32 }} />
         </IconButton>
       </Box>
       
       {/* Profile Section */}
-      <Box display="flex" flexDirection="column" alignItems="center" mt={2} mb={4}>
+      <Box display="flex" flexDirection="column" alignItems="center" mt={2} mb={4} sx={{ width: '100%', maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4, lg: 6 } }}>
         <Avatar 
           src={profileData.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}`} 
           alt={profileData.name || 'User'} 
@@ -220,6 +220,46 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
         <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', mb: 1, fontSize: 18 }}>
           <span style={{ fontSize: 18 }}>{profileData.username ? `@${profileData.username}` : ''}</span>
         </Typography>
+        
+        {/* Additional Profile Info */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 3, mb: 2, maxWidth: 800 }}>
+          {profileData.bio && (
+            <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 16, textAlign: 'center', maxWidth: 600 }}>
+              {profileData.bio}
+            </Typography>
+          )}
+          {profileData.age && (
+            <Chip 
+              label={`Age: ${profileData.age}`} 
+              sx={{ 
+                bgcolor: isDark ? '#2d3a4a' : '#e9e5dc',
+                color: isDark ? '#fafafa' : '#222',
+                fontWeight: 600
+              }} 
+            />
+          )}
+          {profileData.gender && (
+            <Chip 
+              label={profileData.gender} 
+              sx={{ 
+                bgcolor: isDark ? '#2d3a4a' : '#e9e5dc',
+                color: isDark ? '#fafafa' : '#222',
+                fontWeight: 600
+              }} 
+            />
+          )}
+          {profileData.sun_sign && (
+            <Chip 
+              label={profileData.sun_sign} 
+              sx={{ 
+                bgcolor: isDark ? '#2d3a4a' : '#e9e5dc',
+                color: isDark ? '#fafafa' : '#222',
+                fontWeight: 600
+              }} 
+            />
+          )}
+        </Box>
+        
         {loading ? (
           <Typography sx={{ fontWeight: 600, mb: 2, fontSize: 18, color: isDark ? '#e0e0e0' : '#222' }}>
             Loading followers...
@@ -231,10 +271,21 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
             {followersCount} followers · {followingCount} following
           </Typography>
         )}
-        <Box display="flex" gap={2} mb={2}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          justifyContent: 'center', 
+          gap: 3, 
+          mb: 3,
+          maxWidth: 800,
+          '& .MuiButton-root': {
+            minWidth: 140,
+            height: 48
+          }
+        }}>
           <Button
             variant="contained"
-            sx={{ 
+            sx={{
               bgcolor: isDark ? '#23272f' : '#e9e5dc', 
               color: isDark ? '#fafafa' : '#222', 
               borderRadius: 3, 
@@ -265,7 +316,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
             Share
           </Button>
           {shareCopied && (
-            <Typography sx={{ color: isDark ? '#90caf9' : '#1976d2', fontWeight: 500, ml: 2, alignSelf: 'center' }}>
+            <Typography sx={{ color: isDark ? '#90caf9' : '#1976d2', fontWeight: 500, alignSelf: 'center' }}>
               Profile link copied!
             </Typography>
           )}
@@ -291,7 +342,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
       </Box>
 
       {/* User's Posts Section */}
-      <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', px: 2, pb: 8 }}>
+      <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4, lg: 6 }, pb: 8 }}>
         <ButtonGroup
           variant="contained"
           sx={{
@@ -326,7 +377,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
             disableElevation
             sx={{ borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}
           >
-            Your Posts
+            Posts
           </Button>
           {isOwnProfile && (
             <Button
@@ -343,7 +394,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
         {view === 'posts' ? (
           <>
             <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: isDark ? '#fafafa' : '#222' }}>
-              Your Posts
+              Posts
             </Typography>
             {postsLoading ? (
               <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>
@@ -358,9 +409,21 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
                 You haven't posted anything yet.
               </Typography>
             ) : (
-              <Box display="flex" flexDirection="column" gap={2}>
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+                gap: 3,
+                width: '100%'
+              }}>
                 {userPosts.map(post => (
-                  <Card key={post.id} sx={{ mb: 2, bgcolor: isDark ? '#23272f' : '#f9f9f9', borderRadius: 3, boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001' }}>
+                  <Card key={post.id} sx={{ 
+                    bgcolor: isDark ? '#23272f' : '#f9f9f9', 
+                    borderRadius: 3, 
+                    boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001',
+                    height: 'fit-content',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
                     <CardHeader
                       avatar={<Avatar src={profileData.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}`} alt={profileData.name || 'User'} />}
                       title={profileData.name || 'User'}
@@ -372,7 +435,7 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
                               <IconButton 
                                 onClick={() => handleDeletePost(post.id)} 
                                 disabled={deleteLoading[post.id]} 
-                                sx={{
+        sx={{
                                   color: isDark ? '#9ca3af' : '#6b7280',
                                   '&:hover': {
                                     background: 'rgba(239, 68, 68, 0.1)',
@@ -426,15 +489,27 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
             ) : bookmarksError ? (
               <Typography sx={{ color: 'red', fontSize: 20, mb: 2, textAlign: 'center' }}>
                 {bookmarksError}
-              </Typography>
+            </Typography>
             ) : bookmarks.length === 0 ? (
               <Typography sx={{ color: isDark ? '#b0b8c1' : '#555', fontSize: 20, mb: 2, textAlign: 'center' }}>
                 You haven't bookmarked any posts yet.
-              </Typography>
+            </Typography>
             ) : (
-              <Box display="flex" flexDirection="column" gap={2}>
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+                gap: 3,
+                width: '100%'
+              }}>
                 {bookmarks.map(post => (
-                  <Card key={post.id} sx={{ mb: 2, bgcolor: isDark ? '#23272f' : '#f9f9f9', borderRadius: 3, boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001' }}>
+                  <Card key={post.id} sx={{ 
+                    bgcolor: isDark ? '#23272f' : '#f9f9f9', 
+                    borderRadius: 3, 
+                    boxShadow: isDark ? '0 2px 8px #0004' : '0 2px 8px #0001',
+                    height: 'fit-content',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
                     <CardHeader
                       avatar={<Avatar src={post.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || 'User')}`} alt={post.author?.name || 'User'} />}
                       title={post.author?.name || 'User'}
@@ -492,8 +567,8 @@ export default function Profile({ isDarkTheme, onBack, userId: propUserId }: { i
                 <TextField label="Gender" value={editProfile.gender || ''} onChange={e => setEditProfile({ ...editProfile, gender: e.target.value })} fullWidth margin="dense" />
                 <TextField label="Sun Sign" value={editProfile.sun_sign || ''} onChange={e => setEditProfile({ ...editProfile, sun_sign: e.target.value })} fullWidth margin="dense" />
                 <TextField label="Interests (comma separated)" value={Array.isArray(editProfile.interests) ? editProfile.interests.join(', ') : ''} onChange={e => setEditProfile({ ...editProfile, interests: e.target.value.split(',').map((i: string) => i.trim()).filter(Boolean) })} fullWidth margin="dense" />
-              </Box>
-            </Box>
+          </Box>
+        </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => { setEditOpen(false); setSaveError(''); setSaveSuccess(false); }}>Cancel</Button>
