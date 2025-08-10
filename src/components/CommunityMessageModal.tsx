@@ -27,6 +27,7 @@ interface CommunityMessageModalProps {
   onClose: () => void;
   communityId: number;
   communityName: string;
+  communityImageUrl?: string;
   isDarkTheme: boolean;
   onMessageSent?: () => void;
 }
@@ -45,6 +46,7 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
   onClose,
   communityId,
   communityName,
+  communityImageUrl,
   isDarkTheme,
   onMessageSent
 }) => {
@@ -239,13 +241,14 @@ const CommunityMessageModal: React.FC<CommunityMessageModalProps> = ({
              <ArrowBackIcon />
            </IconButton>
            <Avatar
+             src={communityImageUrl}
              sx={{
-               bgcolor: isDarkTheme ? '#6366f1' : '#3b82f6',
+               bgcolor: communityImageUrl ? 'transparent' : (isDarkTheme ? '#6366f1' : '#3b82f6'),
                width: 40,
                height: 40
              }}
            >
-             <PersonIcon />
+             {!communityImageUrl && <PersonIcon />}
            </Avatar>
            <Box>
              <Typography variant="h6" component="div">

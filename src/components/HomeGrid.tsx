@@ -216,6 +216,19 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
     }
   };
 
+  const handleStartChatWithUser = (user: ExtendedUser) => {
+    // Store the user info in localStorage so ChatContent can access it
+    localStorage.setItem('selectedChatUser', JSON.stringify({
+      id: user.id,
+      name: user.name || user.email,
+      avatarUrl: user.avatarUrl,
+      isOnline: false
+    }));
+    
+    // Navigate to the chat tab
+    setActiveTab('connect');
+  };
+
   const SectionHeader = ({ title, onViewAll }: { title: string; onViewAll: () => void }) => (
     <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5} px={0.5}>
       <Typography
@@ -581,10 +594,7 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
                     <IconButton
                       color="primary"
                       size="small"
-                      onClick={() => {
-                        localStorage.setItem('searchClicked', 'true');
-                        setActiveTab('connect');
-                      }}
+                      onClick={() => handleStartChatWithUser(user)}
                       sx={{ width: 32, height: 32 }}
                     >
                       <ChatBubbleOutlineIcon />

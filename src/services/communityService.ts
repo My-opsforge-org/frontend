@@ -34,6 +34,7 @@ export interface CommunityWithLastMessage {
   id: number;
   name: string;
   description: string;
+  image_url?: string;
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;

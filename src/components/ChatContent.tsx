@@ -335,6 +335,29 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
     }
   }, [selectedUser]);
 
+  // Check for selectedChatUser from localStorage when component mounts
+  useEffect(() => {
+    const selectedChatUserStr = localStorage.getItem('selectedChatUser');
+    if (selectedChatUserStr) {
+      try {
+        const selectedChatUser = JSON.parse(selectedChatUserStr);
+        // Remove the item from localStorage to avoid persistence
+        localStorage.removeItem('selectedChatUser');
+        
+        // Start chat with the selected user
+        setSelectedUser({
+          id: selectedChatUser.id,
+          name: selectedChatUser.name,
+          avatar: selectedChatUser.avatarUrl,
+          isOnline: selectedChatUser.isOnline
+        });
+      } catch (error) {
+        console.error('Error parsing selectedChatUser:', error);
+        localStorage.removeItem('selectedChatUser');
+      }
+    }
+  }, []);
+
   const loadCurrentUser = async () => {
     try {
       const token = localStorage.getItem('access_token');
@@ -414,7 +437,36 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
     setCommunitiesLoading(true);
     try {
       const communitiesData = await CommunityService.getUserCommunitiesWithLastMessages();
-      setCommunities(communitiesData);
+      
+      // Fetch full community details including images for each community
+      const enrichedCommunities = await Promise.all(
+        communitiesData.map(async (community) => {
+          try {
+            const token = localStorage.getItem('access_token');
+            if (!token) return community;
+            
+            const response = await fetch(`${API_BASE_URL}/communities/${community.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            
+            if (response.ok) {
+              const fullCommunity = await response.json();
+              console.log(`Community ${community.id} full details:`, fullCommunity);
+              return {
+                ...community,
+                image_url: fullCommunity.image_url || fullCommunity.imageUrl || fullCommunity.image
+              };
+            }
+            return community;
+          } catch (error) {
+            console.error(`Failed to fetch details for community ${community.id}:`, error);
+            return community;
+          }
+        })
+      );
+      
+      console.log('Enriched communities with images:', enrichedCommunities);
+      setCommunities(enrichedCommunities);
     } catch (error) {
       setCommunities([]);
     } finally {
@@ -1533,8 +1585,15 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
                     }}
                   >
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: '#6366f1' }}>
-                        <GroupsIcon />
+                      <Avatar 
+                        src={community.image_url}
+                        sx={{ 
+                          bgcolor: community.image_url ? 'transparent' : '#6366f1',
+                          width: 48,
+                          height: 48
+                        }}
+                      >
+                        {!community.image_url && <GroupsIcon />}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
@@ -1605,6 +1664,7 @@ export default function ChatContent({ isDarkTheme, searchQuery }: { isDarkTheme:
           }}
           communityId={selectedCommunity.id}
           communityName={selectedCommunity.name}
+          communityImageUrl={selectedCommunity.image_url}
           isDarkTheme={isDarkTheme}
           onMessageSent={handleCommunityMessageSent}
         />

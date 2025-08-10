@@ -49,6 +49,13 @@ export default function Home() {
     fetchProfile();
   }, []);
 
+  // Reset search query when leaving home tab
+  useEffect(() => {
+    if (activeTab !== 'home') {
+      setSearchQuery('');
+    }
+  }, [activeTab]);
+
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     window.location.href = '/login';
