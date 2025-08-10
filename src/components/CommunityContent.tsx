@@ -246,7 +246,25 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
       });
       const data = await res.json();
       if (res.ok) {
-        setPosts([data, ...posts]);
+        // Create a properly formatted post object with correct image structure
+        const newPost = {
+          ...data,
+          images: Array.isArray(data.images) 
+            ? data.images 
+            : (data.image_urls || []).map((url: string) => ({ url })),
+          // Ensure we have the author information
+          author: {
+            name: data.author?.name || 'You',
+            avatarUrl: data.author?.avatarUrl,
+            id: data.author?.id || data.author_id
+          }
+        };
+        
+        // Debug logging to see what's being created
+        console.log('Created new community post:', newPost);
+        console.log('Post images:', newPost.images);
+        
+        setPosts([newPost, ...posts]);
         setPostTitle('');
         setPostContent('');
         setPostImages('');
@@ -254,7 +272,7 @@ export default function CommunityContent({ isDarkTheme, searchQuery }: { isDarkT
         // Emit event to notify other components (like HomeContent) about the new post
         // This ensures the home feed refreshes and shows the new post with images immediately
         postEventManager.emitPostCreated({
-          post: data,
+          post: newPost,
           source: 'community'
         });
       } else {

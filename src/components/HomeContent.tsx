@@ -11,6 +11,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import FAB from './FAB';
+import { postEventManager } from '../utils/postEvents';
 
 interface Post {
   id: number;
@@ -81,6 +82,19 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       }
     };
     fetchCurrentUser();
+  }, []);
+
+  // Listen for post creation events from other components
+  useEffect(() => {
+    const unsubscribe = postEventManager.addListener((event) => {
+      if (event.source === 'community') {
+        // Add the new community post to the home feed
+        setPosts(posts => [event.post, ...posts]);
+      }
+    });
+
+    // Cleanup listener on unmount
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -232,10 +246,25 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       });
       const data = await response.json();
       if (response.ok) {
-        setPosts(posts => [{
+        // Create a properly formatted post object with correct image structure
+        const newPost = {
           ...data.post,
-          images: (data.post.image_urls || []).map((url: string) => ({ url })),
-        }, ...posts]);
+          images: Array.isArray(data.post.images) 
+            ? data.post.images 
+            : (data.post.image_urls || []).map((url: string) => ({ url })),
+          // Ensure we have the author information
+          author: {
+            name: data.post.author?.name || 'You',
+            avatarUrl: data.post.author?.avatarUrl,
+            id: data.post.author?.id || currentUserId
+          }
+        };
+        
+        // Debug logging to see what's being created
+        console.log('Created new post:', newPost);
+        console.log('Post images:', newPost.images);
+        
+        setPosts(posts => [newPost, ...posts]);
         setProfilePostTitle('');
         setProfilePostContent('');
         setProfilePostImages('');
