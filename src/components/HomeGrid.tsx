@@ -25,6 +25,7 @@ type HomeGridProps = {
   isDarkTheme: boolean;
   setActiveTab: (tab: string) => void;
   layout?: 'standalone' | 'sidebar';
+  searchQuery?: string;
 };
 
 type ExtendedUser = {
@@ -44,7 +45,7 @@ type Community = {
   is_member?: boolean;
 };
 
-export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalone' }: HomeGridProps) {
+export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalone', searchQuery }: HomeGridProps) {
   const [users, setUsers] = useState<ExtendedUser[]>([]);
   const [avatars, setAvatars] = useState<AvatarItem[]>([]);
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -53,6 +54,32 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
   const [loadingCommunities, setLoadingCommunities] = useState(true);
   const [followLoading, setFollowLoading] = useState<{ [userId: number]: boolean }>({});
   const [communityActionLoading, setCommunityActionLoading] = useState<{ [communityId: number]: boolean }>({});
+
+  // Filter data based on search query
+  const filteredUsers = users.filter(user => 
+    !searchQuery || 
+    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.bio?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredAvatars = avatars.filter(avatar => 
+    !searchQuery || 
+    avatar.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    avatar.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredCommunities = communities.filter(community => 
+    !searchQuery || 
+    community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    community.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Check if any results exist for search
+  const hasSearchResults = searchQuery ? (
+    filteredUsers.length > 0 || 
+    filteredAvatars.length > 0 || 
+    filteredCommunities.length > 0
+  ) : true;
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -298,6 +325,64 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
       maxWidth: layout === 'sidebar' ? 'none' : 1200,
       mx: layout === 'sidebar' ? 0 : 'auto'
     }}>
+      {/* Search indicator */}
+      {searchQuery && (
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 2,
+            px: 2,
+            borderRadius: 2,
+            background: isDarkTheme ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+            border: isDarkTheme ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid rgba(99, 102, 241, 0.1)',
+            mb: 3,
+          }}
+        >
+          <Typography
+            variant="body1"
+            sx={{
+              color: isDarkTheme ? '#90caf9' : '#1976d2',
+              fontWeight: 500,
+            }}
+          >
+            🔍 Searching for "{searchQuery}" in communities, people, and companions
+          </Typography>
+        </Box>
+      )}
+
+      {/* No search results message */}
+      {searchQuery && !hasSearchResults && (
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 4,
+            px: 2,
+            borderRadius: 2,
+            background: isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+            border: isDarkTheme ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+            mb: 3,
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              color: isDarkTheme ? '#e0e0e0' : '#666',
+              fontWeight: 500,
+              mb: 1,
+            }}
+          >
+            No results found for "{searchQuery}"
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: isDarkTheme ? '#b0b0b0' : '#888',
+            }}
+          >
+            Try searching for different keywords or browse all content
+          </Typography>
+        </Box>
+      )}
       {/* Companions */}
       <SectionCard>
         <SectionHeader title="Companions" onViewAll={() => setActiveTab('avatars')} />
@@ -309,7 +394,7 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
           </Grid>
         ) : (
           <Grid>
-            {avatars.slice(0, 6).map((a, idx) => (
+            {filteredAvatars.slice(0, 6).map((a, idx) => (
               <Card
                 key={`${a.name}-${idx}`}
                 sx={{
@@ -367,7 +452,7 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
           </Grid>
         ) : (
           <Grid>
-            {users.slice(0, 6).map((user) => (
+            {filteredUsers.slice(0, 6).map((user) => (
               <Card
                 key={user.id}
                 sx={{
@@ -523,7 +608,7 @@ export default function HomeGrid({ isDarkTheme, setActiveTab, layout = 'standalo
           </Grid>
         ) : (
           <Grid>
-            {communities.slice(0, 6).map((c) => (
+            {filteredCommunities.slice(0, 6).map((c) => (
             <Card
               key={c.id}
               sx={{

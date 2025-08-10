@@ -50,7 +50,7 @@ export default function Content({ isDarkTheme, activeTab, setActiveTab, searchQu
               pb: { md: 8 },
             }}
           >
-            <HomeGrid isDarkTheme={isDarkTheme} setActiveTab={setActiveTab} layout="sidebar" />
+            <HomeGrid isDarkTheme={isDarkTheme} setActiveTab={setActiveTab} layout="sidebar" searchQuery={searchQuery} />
           </Box>
         </Box>
       );

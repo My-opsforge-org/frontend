@@ -51,6 +51,9 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
     if (activeTab === 'avatars') {
       // Already on avatars tab, just focus the search
       return;
+    } else if (activeTab === 'home') {
+      // On home tab, don't redirect - just focus the search
+      return;
     } else if (activeTab !== 'connect' && activeTab !== 'community') {
       setActiveTab('avatars');
       // Set a flag to indicate search was clicked
