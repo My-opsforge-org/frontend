@@ -99,9 +99,8 @@ const FirebaseLogin: React.FC<FirebaseLoginProps> = ({ onLoginSuccess, onLoginEr
             },
             '&:disabled': {
               opacity: 0.6,
-              background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
-              borderColor: '#4a5568',
-            }
+              cursor: 'not-allowed',
+            },
           }}
         >
           {loadingProvider === 'google' ? 'Signing in...' : 'Continue with Google'}
@@ -115,9 +114,9 @@ const FirebaseLogin: React.FC<FirebaseLoginProps> = ({ onLoginSuccess, onLoginEr
           disabled={isLoading}
           startIcon={
             loadingProvider === 'apple' ? (
-              <CircularProgress size={20} sx={{ color: '#ffffff' }} />
+              <CircularProgress size={20} sx={{ color: '#000000' }} />
             ) : (
-              <AppleIcon sx={{ fontSize: 24, color: '#ffffff' }} />
+              <AppleIcon sx={{ fontSize: 24, color: '#000000' }} />
             )
           }
           sx={{
@@ -126,15 +125,15 @@ const FirebaseLogin: React.FC<FirebaseLoginProps> = ({ onLoginSuccess, onLoginEr
             fontWeight: 600,
             textTransform: 'none',
             border: '2px solid',
-            borderColor: '#1a1a1a',
-            background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
-            color: '#ffffff',
+            borderColor: '#2d3748',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f7fafc 100%)',
+            color: '#2d3748',
             borderRadius: 3,
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
-              borderColor: '#333333',
-              background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
+              borderColor: '#000000',
+              background: 'linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)',
+              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
               transform: 'translateY(-2px)',
             },
             '&:active': {
@@ -142,9 +141,8 @@ const FirebaseLogin: React.FC<FirebaseLoginProps> = ({ onLoginSuccess, onLoginEr
             },
             '&:disabled': {
               opacity: 0.6,
-              background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
-              borderColor: '#2d2d2d',
-            }
+              cursor: 'not-allowed',
+            },
           }}
         >
           {loadingProvider === 'apple' ? 'Signing in...' : 'Continue with Apple'}
