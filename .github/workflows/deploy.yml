@@ -100,107 +100,6 @@ jobs:
           sudo apt-get update && sudo apt-get install -y sshpass
           sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'mkdir -p /home/${{ secrets.VM_USER }}/frontend'
 
-      - name: Install Nginx and SSL tools
-        run: |
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "\
-            sudo apt-get update && \
-            sudo apt-get install -y nginx certbot python3-certbot-nginx \
-          "
-
-      - name: Deploy SSL certificates
-        run: |
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "\
-            sudo mkdir -p /etc/ssl/opsforge.me && \
-            echo '${{ secrets.SSL_CERTIFICATE }}' | sudo tee /etc/ssl/opsforge.me/opsforge.me.crt > /dev/null && \
-            echo '${{ secrets.SSL_PRIVATE_KEY }}' | sudo tee /etc/ssl/opsforge.me/opsforge.me.key > /dev/null && \
-            sudo chmod 600 /etc/ssl/opsforge.me/opsforge.me.key && \
-            sudo chmod 644 /etc/ssl/opsforge.me/opsforge.me.crt \
-          "
-
-      - name: Configure Nginx with SSL for Frontend
-        run: |
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "\
-            sudo tee /etc/nginx/sites-available/opsforge.me > /dev/null << 'EOF'
-          server {
-              listen 80;
-              server_name opsforge.me www.opsforge.me;
-              return 301 https://\$server_name\$request_uri;
-          }
-
-          server {
-              listen 443 ssl http2;
-              server_name opsforge.me www.opsforge.me;
-
-              ssl_certificate /etc/ssl/opsforge.me/opsforge.me.crt;
-              ssl_certificate_key /etc/ssl/opsforge.me/opsforge.me.key;
-              ssl_protocols TLSv1.2 TLSv1.3;
-              ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384;
-              ssl_prefer_server_ciphers off;
-              ssl_session_cache shared:SSL:10m;
-              ssl_session_timeout 10m;
-
-              # Frontend (React app)
-              location / {
-                  root /home/${{ secrets.VM_USER }}/frontend/build;
-                  try_files \$uri \$uri/ /index.html;
-                  add_header Cache-Control 'no-cache, no-store, must-revalidate';
-                  add_header Pragma 'no-cache';
-                  add_header Expires '0';
-                  
-                  # Security headers
-                  add_header X-Frame-Options 'SAMEORIGIN' always;
-                  add_header X-Content-Type-Options 'nosniff' always;
-                  add_header X-XSS-Protection '1; mode=block' always;
-                  add_header Referrer-Policy 'strict-origin-when-cross-origin' always;
-              }
-
-              # Backend API (if backend is on same server)
-              location /api/ {
-                  proxy_pass http://localhost:5002;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade \$http_upgrade;
-                  proxy_set_header Connection 'upgrade';
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-                  proxy_cache_bypass \$http_upgrade;
-              }
-
-              # Health check
-              location /health {
-                  proxy_pass http://localhost:5002/api/health;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-              }
-
-              # Gzip compression
-              gzip on;
-              gzip_vary on;
-              gzip_min_length 1024;
-              gzip_proxied any;
-              gzip_comp_level 6;
-              gzip_types
-                  text/plain
-                  text/css
-                  text/xml
-                  text/javascript
-                  application/json
-                  application/javascript
-                  application/xml+rss
-                  application/atom+xml
-                  image/svg+xml;
-          }
-          EOF
-
-          sudo ln -sf /etc/nginx/sites-available/opsforge.me /etc/nginx/sites-enabled/ && \
-          sudo rm -f /etc/nginx/sites-enabled/default && \
-          sudo nginx -t && \
-          sudo systemctl reload nginx \
-          "
-
       - name: Create nginx config script
         run: |
           cat > nginx-frontend-setup.sh <<'EOF'
@@ -324,21 +223,6 @@ jobs:
           script: |
             sudo systemctl restart nginx
           timeout: 30s 
-
-      - name: Check deployment status
-        run: |
-          sshpass -p ${{ secrets.VM_PASSWORD }} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "\
-            echo '=== Frontend Build Status ===' && \
-            ls -la /home/${{ secrets.VM_USER }}/frontend/build/ && \
-            echo '=== Nginx Status ===' && \
-            sudo systemctl status nginx --no-pager -l && \
-            echo '=== SSL Certificate Check ===' && \
-            sudo openssl x509 -in /etc/ssl/opsforge.me/opsforge.me.crt -text -noout | grep -E '(Subject:|Not After:|DNS:)' && \
-            echo '=== SSL Test ===' && \
-            curl -k -I https://opsforge.me/ || echo 'HTTPS not accessible yet' && \
-            echo '=== Frontend Test ===' && \
-            curl -k -I https://opsforge.me/ | head -5 || echo 'Frontend not accessible yet' \
-          "
 
 # Required secrets:
 # VM_HOST: The public IP of your Azure VM (from Terraform output)
