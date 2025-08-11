@@ -9,8 +9,8 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import ExploreIcon from '@mui/icons-material/Explore';
 import StarIcon from '@mui/icons-material/Star';
 import DiamondIcon from '@mui/icons-material/Diamond';
-import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider, Paper, InputAdornment, Slider, LinearProgress } from '@mui/material';
-import React, { useState, useEffect, useMemo } from 'react';
+import { AppBar, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography, TextField, Chip, Divider, Paper, InputAdornment, Slider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../api';
 import { useUserProgress } from '../contexts/UserProgressContext';
 
@@ -25,7 +25,7 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
   const [locationQuery, setLocationQuery] = useState('');
   const [radiusValue, setRadiusValue] = useState(5);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-  const { userProgress, refreshUserProgress, loading: progressLoading } = useUserProgress();
+  const { userProgress, refreshUserProgress } = useUserProgress();
 
 
 

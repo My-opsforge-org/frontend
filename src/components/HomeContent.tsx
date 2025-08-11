@@ -313,7 +313,7 @@ export default function HomeContent({ isDarkTheme }: { isDarkTheme: boolean }) {
       }
       if (typeof input === 'string') {
         const tzlessRegex = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?)$/;
-        const hasTimezone = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(input);
+        const hasTimezone = /[zZ]|[+-]\d{2}:?\d{2}$/.test(input);
         if (!hasTimezone && tzlessRegex.test(input)) {
           // Treat timezone-less backend strings as UTC
           const isoCandidate = input.replace(' ', 'T') + 'Z';

@@ -74,7 +74,7 @@ export default function ExploreContent({ isDarkTheme, questLocation, questRadius
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [visitedSpots, setVisitedSpots] = useState<Set<string>>(new Set());
   const [xpNotification, setXpNotification] = useState<{xp: number, message: string} | null>(null);
-  const { userProgress, refreshUserProgress, updateUserProgress } = useUserProgress();
+  const { userProgress, updateUserProgress } = useUserProgress();
 
 
 
