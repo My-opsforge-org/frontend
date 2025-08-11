@@ -414,129 +414,261 @@ export default function Header({ name, profileImage, isDarkTheme, showOptions, s
           
           {/* Location Field for Explore Tab */}
           {activeTab === 'explore' ? (
-            <Box sx={{ 
-              display: { xs: 'none', sm: 'flex' }, 
-              alignItems: 'center', 
-              flex: { xs: 0, sm: 1 }, 
-              mx: { xs: 0.5, sm: 1, md: 1.5 }, 
-              gap: { xs: 0.5, sm: 1, md: 1.5 },
-              flexWrap: { xs: 'wrap', sm: 'nowrap' },
-              maxWidth: { sm: 'calc(100% - 300px)', md: 'calc(100% - 350px)', lg: 'calc(100% - 400px)' },
-              minWidth: { sm: 200, md: 250, lg: 300 }
-            }}>
-              <TextField
-                placeholder="Enter location..."
-                value={locationQuery}
-                onChange={(e) => {
-                  setLocationQuery(e.target.value);
-                  if (onLocationChange) onLocationChange(e.target.value);
-                }}
-                size="small"
-                sx={{
-                  flex: 1,
-                  cursor: 'pointer',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    background: isDarkTheme 
-                      ? 'rgba(255, 255, 255, 0.1)' 
-                      : 'rgba(99, 102, 241, 0.1)',
-                    border: 'none',
-                    '&:hover': {
+            <>
+              {/* Mobile Layout for Explore Tab */}
+              <Box sx={{ 
+                display: { xs: 'flex', sm: 'none' }, 
+                flexDirection: 'column',
+                width: '100%',
+                gap: 1.5,
+                px: 1,
+                py: 1
+              }}>
+                {/* Mobile Location Input */}
+                <TextField
+                  placeholder="📍 Enter location..."
+                  value={locationQuery}
+                  onChange={(e) => {
+                    setLocationQuery(e.target.value);
+                    if (onLocationChange) onLocationChange(e.target.value);
+                  }}
+                  size="small"
+                  fullWidth
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
                       background: isDarkTheme 
                         ? 'rgba(255, 255, 255, 0.15)' 
                         : 'rgba(99, 102, 241, 0.15)',
-                    },
-                    '&.Mui-focused': {
-                      background: isDarkTheme 
-                        ? 'rgba(255, 255, 255, 0.2)' 
-                        : 'rgba(99, 102, 241, 0.2)',
-                      boxShadow: isDarkTheme
-                        ? '0 0 0 2px rgba(255, 255, 255, 0.3)'
-                        : '0 0 0 2px rgba(99, 102, 241, 0.3)',
-                    }
-                  },
-                  '& .MuiInputBase-input': {
-                    color: isDarkTheme ? 'white' : '#1f2937',
-                    '&::placeholder': {
-                      color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(31, 41, 55, 0.6)',
-                      opacity: 1
-                    }
-                  }
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LocationOnIcon sx={{ 
-                        color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
-                        fontSize: 20
-                      }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              
-              {/* Radius Slider */}
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: { xs: 0.5, sm: 1 },
-                minWidth: { xs: 140, sm: 180, md: 250 },
-                flexShrink: 1,
-                px: { xs: 1.5, sm: 2, md: 4 },
-                py: { xs: 0.5, sm: 1 },
-                borderRadius: 3,
-                background: isDarkTheme 
-                  ? 'rgba(255, 255, 255, 0.1)' 
-                  : 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid',
-                borderColor: isDarkTheme 
-                  ? 'rgba(255, 255, 255, 0.2)' 
-                  : 'rgba(99, 102, 241, 0.2)',
-              }}>
-                <MyLocationIcon sx={{ 
-                  color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
-                  fontSize: { xs: 16, sm: 18 }
-                }} />
-                <Slider
-                  value={radiusValue}
-                  onChange={(_, value) => {
-                    setRadiusValue(value as number);
-                    if (onRadiusChange) onRadiusChange(value as number);
-                  }}
-                  min={1}
-                  max={10}
-                  step={1}
-                  size="small"
-                  sx={{
-                    color: isDarkTheme ? '#6366f1' : '#6366f1',
-                    '& .MuiSlider-track': {
-                      background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
-                    },
-                    '& .MuiSlider-thumb': {
-                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                      border: isDarkTheme 
+                        ? '1px solid rgba(255, 255, 255, 0.2)' 
+                        : '1px solid rgba(99, 102, 241, 0.3)',
                       '&:hover': {
-                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+                        background: isDarkTheme 
+                          ? 'rgba(255, 255, 255, 0.2)' 
+                          : 'rgba(99, 102, 241, 0.2)',
+                        borderColor: isDarkTheme 
+                          ? 'rgba(255, 255, 255, 0.3)' 
+                          : 'rgba(99, 102, 241, 0.4)',
+                      },
+                      '&.Mui-focused': {
+                        background: isDarkTheme 
+                          ? 'rgba(255, 255, 255, 0.25)' 
+                          : 'rgba(99, 102, 241, 0.25)',
+                        borderColor: isDarkTheme 
+                          ? 'rgba(255, 255, 255, 0.4)' 
+                          : 'rgba(99, 102, 241, 0.5)',
+                        boxShadow: isDarkTheme
+                          ? '0 0 0 3px rgba(255, 255, 255, 0.2)'
+                          : '0 0 0 3px rgba(99, 102, 241, 0.3)',
                       }
                     },
-                    '& .MuiSlider-rail': {
-                      background: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+                    '& .MuiInputBase-input': {
+                      color: isDarkTheme ? 'white' : '#1f2937',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      '&::placeholder': {
+                        color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)',
+                        opacity: 1
+                      }
                     }
                   }}
-                />
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(99, 102, 241, 0.8)',
-                    fontWeight: 600,
-                    minWidth: { xs: 22, sm: 25 },
-                    textAlign: 'center'
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocationOnIcon sx={{ 
+                          color: isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(99, 102, 241, 0.7)',
+                          fontSize: 18
+                        }} />
+                      </InputAdornment>
+                    ),
                   }}
-                >
-                  {radiusValue}km
-                </Typography>
+                />
+                
+                {/* Mobile Radius Control */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  gap: 1,
+                  px: 0.5,
+                  py: 0.5,
+                  borderRadius: 2,
+                  background: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(99, 102, 241, 0.1)',
+                  border: '1px solid',
+                  borderColor: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : 'rgba(99, 102, 241, 0.2)',
+                }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(31,41,55,0.9)',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    🎯 {radiusValue}km
+                  </Typography>
+                  <Slider
+                    value={radiusValue}
+                    onChange={(_, value) => {
+                      setRadiusValue(value as number);
+                      if (onRadiusChange) onRadiusChange(value as number);
+                    }}
+                    min={1}
+                    max={10}
+                    step={1}
+                    size="small"
+                    sx={{
+                      width: 100,
+                      color: '#6366f1',
+                      '& .MuiSlider-thumb': {
+                        width: 18,
+                        height: 18,
+                        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.4)',
+                      },
+                      '& .MuiSlider-track': {
+                        height: 4,
+                      },
+                      '& .MuiSlider-rail': {
+                        height: 4,
+                      }
+                    }}
+                  />
+                </Box>
               </Box>
-            </Box>
+
+              {/* Desktop Layout for Explore Tab */}
+              <Box sx={{ 
+                display: { xs: 'none', sm: 'flex' }, 
+                alignItems: 'center', 
+                flex: { xs: 0, sm: 1 }, 
+                mx: { xs: 0.5, sm: 1, md: 1.5 }, 
+                gap: { xs: 0.5, sm: 1, md: 1.5 },
+                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                maxWidth: { sm: 'calc(100% - 300px)', md: 'calc(100% - 350px)', lg: 'calc(100% - 400px)' },
+                minWidth: { sm: 200, md: 250, lg: 300 }
+              }}>
+                <TextField
+                  placeholder="Enter location..."
+                  value={locationQuery}
+                  onChange={(e) => {
+                    setLocationQuery(e.target.value);
+                    if (onLocationChange) onLocationChange(e.target.value);
+                  }}
+                  size="small"
+                  sx={{
+                    flex: 1,
+                    cursor: 'pointer',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 3,
+                      background: isDarkTheme 
+                        ? 'rgba(255, 255, 255, 0.1)' 
+                        : 'rgba(99, 102, 241, 0.1)',
+                      border: 'none',
+                      '&:hover': {
+                        background: isDarkTheme 
+                          ? 'rgba(255, 255, 255, 0.15)' 
+                          : 'rgba(99, 102, 241, 0.15)',
+                      },
+                      '&.Mui-focused': {
+                        background: isDarkTheme 
+                          ? 'rgba(255, 255, 255, 0.2)' 
+                          : 'rgba(99, 102, 241, 0.2)',
+                        boxShadow: isDarkTheme
+                          ? '0 0 0 2px rgba(255, 255, 255, 0.3)'
+                          : '0 0 0 2px rgba(99, 102, 241, 0.3)',
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      color: isDarkTheme ? 'white' : '#1f2937',
+                      '&::placeholder': {
+                        color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(31, 41, 55, 0.6)',
+                        opacity: 1
+                      }
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocationOnIcon sx={{ 
+                          color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
+                          fontSize: 20
+                        }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              
+                {/* Radius Slider */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: { xs: 0.5, sm: 1 },
+                  minWidth: { xs: 140, sm: 180, md: 250 },
+                  flexShrink: 1,
+                  px: { xs: 1.5, sm: 2, md: 4 },
+                  py: { xs: 0.5, sm: 1 },
+                  borderRadius: 3,
+                  background: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(99, 102, 241, 0.1)',
+                  border: '1px solid',
+                  borderColor: isDarkTheme 
+                    ? 'rgba(255, 255, 255, 0.2)' 
+                    : 'rgba(99, 102, 241, 0.2)',
+                }}>
+                  <MyLocationIcon sx={{ 
+                    color: isDarkTheme ? 'rgba(255, 255, 255, 0.6)' : 'rgba(99, 102, 241, 0.6)',
+                    fontSize: { xs: 16, sm: 18 }
+                  }} />
+                  <Slider
+                    value={radiusValue}
+                    onChange={(_, value) => {
+                      setRadiusValue(value as number);
+                      if (onRadiusChange) onRadiusChange(value as number);
+                    }}
+                    min={1}
+                    max={10}
+                    step={1}
+                    size="small"
+                    sx={{
+                      color: isDarkTheme ? '#6366f1' : '#6366f1',
+                      '& .MuiSlider-track': {
+                        background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                      },
+                      '& .MuiSlider-thumb': {
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                        '&:hover': {
+                          boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+                        }
+                      },
+                      '& .MuiSlider-rail': {
+                        background: isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+                      }
+                    }}
+                  />
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(99, 102, 241, 0.8)',
+                      fontWeight: 600,
+                      minWidth: { xs: 22, sm: 25 },
+                      textAlign: 'center'
+                    }}
+                  >
+                    {radiusValue}km
+                  </Typography>
+                </Box>
+              </Box>
+            </>
           ) : (
             /* Search Field for other tabs */
             <TextField

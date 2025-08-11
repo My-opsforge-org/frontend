@@ -34,14 +34,26 @@ A modern React TypeScript frontend for the Go Tripping application, designed to 
    ```
 
 3. **Configure environment variables**
-   Create a `.env` file in the frontend directory:
-   ```bash
-   # API Configuration
-   REACT_APP_API_URL=http://localhost:5002/api
    
-   # Socket.IO Configuration
-   REACT_APP_SOCKET_URL=http://localhost:5002
+   **For Local Development:**
+   Copy the example file and configure your local environment:
+   ```bash
+   cp env.local.example .env.local
+   # Edit .env.local with your actual API keys and configuration
    ```
+   
+   **For Production:**
+   All environment variables are configured through GitHub Secrets in the deployment workflow.
+   
+   **Required Environment Variables:**
+   - `REACT_APP_BASE_URL` - Backend API base URL
+   - `REACT_APP_BACKEND_URL` - Backend server URL
+   - `REACT_APP_GOOGLE_MAPS_API_KEY` - Google Maps API key
+   - `REACT_APP_GOOGLE_PLACES_API_KEY` - Google Places API key
+   - `REACT_APP_FIREBASE_API_KEY` - Firebase API key
+   - `REACT_APP_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
+   - `REACT_APP_FIREBASE_PROJECT_ID` - Firebase project ID
+   - And other Firebase configuration variables
 
 4. **Start the development server**
    ```bash

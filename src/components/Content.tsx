@@ -36,9 +36,25 @@ export default function Content({ isDarkTheme, activeTab, setActiveTab, searchQu
             alignItems: 'start',
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
+          {/* Show HomeGrid instead of HomeContent when searching on narrow screens */}
+          {searchQuery ? (
+            <Box sx={{ 
+              display: { xs: 'block', md: 'none' },
+              width: '100%'
+            }}>
+              <HomeGrid isDarkTheme={isDarkTheme} setActiveTab={setActiveTab} layout="standalone" searchQuery={searchQuery} />
+            </Box>
+          ) : null}
+          
+          {/* Show HomeContent when not searching or on wider screens */}
+          <Box sx={{ 
+            minWidth: 0,
+            display: searchQuery ? { xs: 'none', md: 'block' } : 'block'
+          }}>
             <HomeContent isDarkTheme={isDarkTheme} />
           </Box>
+          
+          {/* Sidebar HomeGrid - always visible on wider screens, hidden on narrow screens when searching */}
           <Box
             sx={{
               display: { xs: 'none', md: 'block' },
