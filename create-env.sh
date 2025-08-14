@@ -10,8 +10,8 @@ cat > .env << 'EOF'
 
 # Backend Server Configuration
 # Update this to your actual backend IP
-REACT_APP_BASE_URL=http://4.206.104.171:5002/api
-REACT_APP_BACKEND_URL=http://4.206.104.171:5002
+REACT_APP_BASE_URL=https://api.opsforge.me/api
+REACT_APP_BACKEND_URL=https://api.opsforge.me
 
 # Client Configuration
 REACT_APP_CLIENT_URL=http://4.205.228.59
@@ -51,7 +51,7 @@ REACT_APP_FIREBASE_APP_ID=your_app_id
 EOF
 
 echo "✅ Frontend .env file created successfully!"
-echo "🌐 Frontend will now connect to backend at: http://4.206.104.171:5002"
+echo "🌐 Frontend will now connect to backend at: https://api.opsforge.me"
 echo "📍 Frontend URL: http://4.205.228.59"
 echo ""
 echo "To apply changes:"

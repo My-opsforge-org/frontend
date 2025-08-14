@@ -50,22 +50,12 @@ export class ChatService {
       return null;
     }
 
-    // Get backend URL from environment variable or default to localhost
-    let backendUrl = process.env.REACT_APP_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+    // Get backend URL from environment variable or default to production URL
+    let backendUrl = process.env.REACT_APP_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'https://api.opsforge.me';
     
     // If BASE_URL includes /api, remove it for Socket.IO connection
-    // But be careful with HTTPS URLs - we need to preserve the protocol
     if (backendUrl.includes('/api')) {
       backendUrl = backendUrl.replace('/api', '');
-    }
-    
-    // Ensure we have a proper protocol for WebSocket
-    if (backendUrl.startsWith('https://')) {
-      // Convert https:// to wss:// for WebSocket
-      backendUrl = backendUrl.replace('https://', 'wss://');
-    } else if (backendUrl.startsWith('http://')) {
-      // Convert http:// to ws:// for WebSocket
-      backendUrl = backendUrl.replace('http://', 'ws://');
     }
     
     try {

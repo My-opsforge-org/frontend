@@ -47,7 +47,7 @@ export class CommunityChatService {
     }
 
     try {
-      this.socket = io('http://localhost:5002', {
+      this.socket = io('https://api.opsforge.me', {
         auth: {
           token: token
         },

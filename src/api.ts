@@ -15,8 +15,8 @@ const getBackendUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // Default to localhost:5002 for development
-  return 'http://localhost:5002/api';
+  // Default to production URL
+  return 'https://api.opsforge.me/api';
 };
 
 export const API_BASE_URL = getBackendUrl();

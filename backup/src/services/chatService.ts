@@ -50,8 +50,8 @@ export class ChatService {
       return null;
     }
 
-    // Get backend URL from environment variable or default to localhost
-    let backendUrl = process.env.REACT_APP_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+    // Get backend URL from environment variable or default to production URL
+    let backendUrl = process.env.REACT_APP_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'https://api.opsforge.me';
     
     // If BASE_URL includes /api, remove it for Socket.IO connection
     if (backendUrl.includes('/api')) {

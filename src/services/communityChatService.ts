@@ -47,19 +47,10 @@ export class CommunityChatService {
     }
 
     try {
-      // Get backend URL from environment variable or default to backend IP
-      let backendUrl = process.env.REACT_APP_BASE_URL?.replace('/api', '') || 
-                      process.env.REACT_APP_BACKEND_URL || 
-                      'http://4.206.104.171:5002';
-      
-      // Ensure we have a proper protocol for WebSocket
-      if (backendUrl.startsWith('https://')) {
-        // Convert https:// to wss:// for WebSocket
-        backendUrl = backendUrl.replace('https://', 'wss://');
-      } else if (backendUrl.startsWith('http://')) {
-        // Convert http:// to ws:// for WebSocket
-        backendUrl = backendUrl.replace('http://', 'ws://');
-      }
+      // Get backend URL from environment variable or default to production URL
+      const backendUrl = process.env.REACT_APP_BASE_URL?.replace('/api', '') || 
+                        process.env.REACT_APP_BACKEND_URL || 
+                        'https://api.opsforge.me';
       
       this.socket = io(backendUrl, {
         auth: {
