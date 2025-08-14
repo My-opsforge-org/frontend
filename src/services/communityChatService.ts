@@ -47,10 +47,55 @@ export class CommunityChatService {
     }
 
     try {
+      // Debug environment variables
+      console.log('🔍 Environment variables:');
+      console.log('  REACT_APP_BASE_URL:', process.env.REACT_APP_BASE_URL);
+      console.log('  REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
+      
+      // Check for malformed environment variables
+      if (process.env.REACT_APP_BASE_URL && process.env.REACT_APP_BASE_URL.includes('https:/') && !process.env.REACT_APP_BASE_URL.includes('https://')) {
+        console.warn('⚠️  Malformed REACT_APP_BASE_URL detected:', process.env.REACT_APP_BASE_URL);
+      }
+      if (process.env.REACT_APP_BACKEND_URL && process.env.REACT_APP_BACKEND_URL.includes('https:/') && !process.env.REACT_APP_BACKEND_URL.includes('https://')) {
+        console.warn('⚠️  Malformed REACT_APP_BACKEND_URL detected:', process.env.REACT_APP_BACKEND_URL);
+      }
+      
       // Get backend URL from environment variable or default to production URL
-      const backendUrl = process.env.REACT_APP_BASE_URL?.replace('/api', '') || 
-                        process.env.REACT_APP_BACKEND_URL || 
-                        'https://api.opsforge.me';
+      let backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://api.opsforge.me';
+      
+      // If we only have BASE_URL, extract the base domain for socket connection
+      if (!process.env.REACT_APP_BACKEND_URL && process.env.REACT_APP_BASE_URL) {
+        const baseUrl = process.env.REACT_APP_BASE_URL;
+        console.log('  Using BASE_URL for socket connection:', baseUrl);
+        if (baseUrl.includes('/api')) {
+          backendUrl = baseUrl.replace('/api', '');
+        } else {
+          backendUrl = baseUrl;
+        }
+      }
+      
+      // Ensure the URL is properly formatted for WebSocket connection
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
+      
+      // Additional URL sanitization
+      if (backendUrl.includes('https:/') && !backendUrl.includes('https://')) {
+        backendUrl = backendUrl.replace('https:/', 'https://');
+      }
+      if (backendUrl.includes('http:/') && !backendUrl.includes('http://')) {
+        backendUrl = backendUrl.replace('http:/', 'http://');
+      }
+      
+      // Validate URL format
+      try {
+        new URL(backendUrl);
+      } catch (error) {
+        console.error('Invalid backend URL format:', backendUrl);
+        backendUrl = 'https://api.opsforge.me'; // Fallback to production
+      }
+      
+      console.log('🔌 Community chat socket connecting to:', backendUrl);
       
       this.socket = io(backendUrl, {
         auth: {
