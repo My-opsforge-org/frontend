@@ -3,8 +3,7 @@ import {
   signOut, 
   onAuthStateChanged, 
   User as FirebaseUser,
-  AuthError,
-  AuthErrorCodes
+  AuthError
 } from 'firebase/auth';
 import { auth, googleProvider, appleProvider } from '../config/firebase';
 
@@ -20,27 +19,25 @@ export class FirebaseAuthService {
   // Helper function to get user-friendly error messages
   private static getErrorMessage(error: AuthError): string {
     switch (error.code) {
-      case AuthErrorCodes.UNAUTHORIZED_DOMAIN:
+      case 'auth/unauthorized-domain':
         return 'This domain is not authorized for Firebase authentication. Please contact support or try from an authorized domain.';
-      case AuthErrorCodes.POPUP_CLOSED_BY_USER:
+      case 'auth/popup-closed-by-user':
         return 'Sign-in was cancelled. Please try again.';
-      case AuthErrorCodes.POPUP_BLOCKED:
+      case 'auth/popup-blocked':
         return 'Pop-up was blocked by your browser. Please allow pop-ups and try again.';
-      case AuthErrorCodes.ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL:
+      case 'auth/account-exists-with-different-credential':
         return 'An account already exists with the same email address but different sign-in credentials.';
-      case AuthErrorCodes.INVALID_EMAIL:
+      case 'auth/invalid-email':
         return 'Invalid email address.';
-      case AuthErrorCodes.WEAK_PASSWORD:
+      case 'auth/weak-password':
         return 'Password is too weak.';
-      case AuthErrorCodes.USER_DISABLED:
+      case 'auth/user-disabled':
         return 'This account has been disabled.';
-      case AuthErrorCodes.USER_NOT_FOUND:
-        return 'No account found with this email address.';
-      case AuthErrorCodes.WRONG_PASSWORD:
-        return 'Incorrect password.';
-      case AuthErrorCodes.TOO_MANY_REQUESTS:
+      case 'auth/invalid-credential':
+        return 'Invalid email or password.';
+      case 'auth/too-many-requests':
         return 'Too many failed attempts. Please try again later.';
-      case AuthErrorCodes.NETWORK_REQUEST_FAILED:
+      case 'auth/network-request-failed':
         return 'Network error. Please check your internet connection.';
       default:
         return error.message || 'Authentication failed. Please try again.';
@@ -65,7 +62,7 @@ export class FirebaseAuthService {
       const errorCode = error.code || 'unknown';
       
       // Special handling for unauthorized domain
-      if (error.code === AuthErrorCodes.UNAUTHORIZED_DOMAIN) {
+      if (error.code === 'auth/unauthorized-domain') {
         console.error('Domain not authorized in Firebase. Current domain:', window.location.hostname);
         console.error('Please add this domain to Firebase Console > Authentication > Settings > Authorized domains');
       }
