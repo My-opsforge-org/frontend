@@ -1,3 +1,12 @@
+#!/bin/bash
+
+echo "Setting up production environment variables for frontend..."
+echo
+
+echo "Creating .env.local file with production configuration..."
+echo
+
+cat > .env.local << 'EOF'
 # Frontend Environment Configuration for Production
 
 # Backend Server Configuration
@@ -27,3 +36,10 @@ REACT_APP_VERSION=1.0.0
 # Debug Configuration
 REACT_APP_DEBUG=false
 REACT_APP_LOG_LEVEL=warn
+EOF
+
+echo
+echo ".env.local file created successfully!"
+echo
+echo "Please restart your development server for the changes to take effect."
+echo
